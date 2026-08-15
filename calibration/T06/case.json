@@ -1,0 +1,12 @@
+{
+  "case_id": "T06",
+  "historical_source_key": "song_004",
+  "purpose": "external mythic/religious material",
+  "targets": [
+    "legacy_bindings",
+    "name_restraint"
+  ],
+  "status": "calibration",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

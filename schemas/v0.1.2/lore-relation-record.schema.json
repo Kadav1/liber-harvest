@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lv-forge.local/schemas/lore-relation-record-v0.1.2.schema.json",
+  "title": "LV-Forge Lore Relation JSONL Record v0.1.2",
+  "description": "One materialized line in library/relations.jsonl.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "relation_id",
+    "relation",
+    "source_fragment_id",
+    "target_fragment_id",
+    "origin",
+    "evidence_fragment_ids",
+    "note",
+    "harvest_run_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "lore-relation/0.1.2"
+    },
+    "relation_id": {
+      "type": "string",
+      "pattern": "^LRL-[A-F0-9]{12}$"
+    },
+    "relation": {
+      "enum": [
+        "related_to",
+        "component_of",
+        "variant_of",
+        "contradicts",
+        "requires",
+        "produces",
+        "performed_at",
+        "located_in",
+        "associated_with",
+        "derived_from"
+      ]
+    },
+    "source_fragment_id": {
+      "type": "string",
+      "pattern": "^LFR-(?:PER|GRP|INS|OFF|PLC|STR|ARC|OBJ|REL|MAT|FLO|CRE|RIT|CUS|PRA|LAW|SOC|ECO|TRD|WAR|DOC|BEL|COS|MYT|LEG|SYM|EVT|HIS|SOM|PAT|MED|ENV|LAN|NAM|PHR|MOT|SEN|NAR|CHR|OTH)-[A-F0-9]{12}$"
+    },
+    "target_fragment_id": {
+      "type": "string",
+      "pattern": "^LFR-(?:PER|GRP|INS|OFF|PLC|STR|ARC|OBJ|REL|MAT|FLO|CRE|RIT|CUS|PRA|LAW|SOC|ECO|TRD|WAR|DOC|BEL|COS|MYT|LEG|SYM|EVT|HIS|SOM|PAT|MED|ENV|LAN|NAM|PHR|MOT|SEN|NAR|CHR|OTH)-[A-F0-9]{12}$"
+    },
+    "origin": {
+      "enum": [
+        "relation_hint",
+        "library_reconciliation"
+      ]
+    },
+    "evidence_fragment_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^LFR-(?:PER|GRP|INS|OFF|PLC|STR|ARC|OBJ|REL|MAT|FLO|CRE|RIT|CUS|PRA|LAW|SOC|ECO|TRD|WAR|DOC|BEL|COS|MYT|LEG|SYM|EVT|HIS|SOM|PAT|MED|ENV|LAN|NAM|PHR|MOT|SEN|NAR|CHR|OTH)-[A-F0-9]{12}$"
+      }
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "harvest_run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "x-lv-forge-invariants": [
+    "source_fragment_id and target_fragment_id SHOULD differ unless a future explicit self-relation rule permits otherwise.",
+    "relation_id SHOULD be generated deterministically from stable relation identity material.",
+    "Relation records do not confer canon status."
+  ]
+}

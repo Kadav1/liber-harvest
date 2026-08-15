@@ -1,0 +1,21 @@
+Liber Harvest v0.1.2 Standalone Schema Validation Report
+
+PASS schema self-check: lore-fragment-draft.schema.json
+PASS schema self-check: harvest-manifest.schema.json
+PASS schema self-check: lore-fragment-record.schema.json
+PASS schema self-check: exegate-harvest-result.schema.json
+PASS schema self-check: lore-relation-record.schema.json
+PASS fragment example
+PASS relation example
+PASS Pydantic harvest result
+PASS draft JSON Schema
+PASS result JSON Schema with ref
+PASS materialized record JSON Schema
+PASS manifest JSON Schema
+PASS LF-13 span materialization
+PASS LF-15 modality preservation
+PASS LF-16 evidence layer
+PASS deterministic typed fragment ID
+
+TOTAL PASS ASSERTIONS: 16
+FAILURES: 0

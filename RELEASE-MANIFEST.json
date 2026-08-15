@@ -1,0 +1,468 @@
+{
+  "product": "Liber Harvest",
+  "version": "0.1.2",
+  "status": "FROZEN / STANDALONE / AUDITED",
+  "architecture_contract": "ARCHITECTURE-FREEZE-v0.1.2.md",
+  "structure_contract": "FOLDER-STRUCTURE-FREEZE-v0.1.2.md",
+  "semantic_contract": "exegate-harvest/0.1.2",
+  "frozen_clauses": "LF-01 through LF-16",
+  "tests": {
+    "pytest_passed": 22,
+    "schema_assertions_passed": 16,
+    "failures": 0
+  },
+  "wheel": "liber_harvest-0.1.2-py3-none-any.whl",
+  "runtime_dependency_on_lv_forge": false,
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 139,
+      "sha256": "a9d811614d218ce761f144a3fff8d762bf1aa7e653995009ff3ac0b1d9e1c6f3"
+    },
+    {
+      "path": "ARCHITECTURE-FREEZE-v0.1.2.md",
+      "bytes": 2658,
+      "sha256": "fcbdb85b774c6eeeb8317981a05e88c3cd17a42c29b6459564eea013bf1bd087"
+    },
+    {
+      "path": "AUDIT-REPORT-v0.1.2.md",
+      "bytes": 1548,
+      "sha256": "fb350827fbbcb4ae1fb7a732e6d54f53ab427e075ccb882ea862305343843d79"
+    },
+    {
+      "path": "FOLDER-STRUCTURE-FREEZE-v0.1.2.md",
+      "bytes": 5124,
+      "sha256": "306437801cfd025760110bdded0115b34e841012829f4fb5b95054ecaaf796e3"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1056,
+      "sha256": "d11f47c929898fc21422ba497bdee527de6acfa16983373f9bd0251527d1d07e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1492,
+      "sha256": "967fc7031ec952fb44af15888ffe5b46c6a0e9a91d78460104e6929e9401ffbf"
+    },
+    {
+      "path": "calibration/README.md",
+      "bytes": 223,
+      "sha256": "4a9086f8e2bad544720c4cc0499f4d1d827a433647fdee1e7b3a1345691276f1"
+    },
+    {
+      "path": "calibration/T01/README.md",
+      "bytes": 285,
+      "sha256": "02427e0dcb75a2158ab8aad387e908c8eead82971078206733d61064438ba230"
+    },
+    {
+      "path": "calibration/T01/case.json",
+      "bytes": 358,
+      "sha256": "06a82f6fc5d7d8159dbf2aebb4b78b3215570589ccc3e51c142793dce4313826"
+    },
+    {
+      "path": "calibration/T02/README.md",
+      "bytes": 294,
+      "sha256": "5f14818bb4fa6f676300657bb473823fe18c555a46c6aba6404f9edd1d3e2e10"
+    },
+    {
+      "path": "calibration/T02/case.json",
+      "bytes": 367,
+      "sha256": "ebb241cf780b1ff0dea943f5914803caf3615dc2d94dcc2f7221210db2ba1322"
+    },
+    {
+      "path": "calibration/T03/README.md",
+      "bytes": 278,
+      "sha256": "bf612bf1256d8f98a6b3c6438bb73543ae932a16b9195ce18b5ea23ff92cfdef"
+    },
+    {
+      "path": "calibration/T03/case.json",
+      "bytes": 358,
+      "sha256": "eb922452bb367b0ff71787347e8839f140fb4ccf1610f8b82fa12ba76ed37467"
+    },
+    {
+      "path": "calibration/T04/README.md",
+      "bytes": 286,
+      "sha256": "9befa2d47e1cb179a39b9844bcbe52730f82491609f664bfbbaedc52de525c32"
+    },
+    {
+      "path": "calibration/T04/case.json",
+      "bytes": 366,
+      "sha256": "0ec25145bd70752bae26e8ce76c4e554bc9ea430bb290409a36806199f0f640e"
+    },
+    {
+      "path": "calibration/T05/README.md",
+      "bytes": 268,
+      "sha256": "d9eafdd4b1f83791d6c49e612aaff524076b375a2c402f2f04da20a49a400a78"
+    },
+    {
+      "path": "calibration/T05/case.json",
+      "bytes": 295,
+      "sha256": "f9264aab055cb16cf2ff2cdbc25e2518b1c82a3cc41b84fae0564c8348429de0"
+    },
+    {
+      "path": "calibration/T06/README.md",
+      "bytes": 267,
+      "sha256": "14252dc6ab23162021e0ed517427b3d1203fc07ab0cb94073501552cc005fd38"
+    },
+    {
+      "path": "calibration/T06/case.json",
+      "bytes": 302,
+      "sha256": "524173fe634adfcef3a2aedd2211b419f966e0b3685496da1908c8d381c64934"
+    },
+    {
+      "path": "calibration/T07/README.md",
+      "bytes": 265,
+      "sha256": "1dd88217433bd31bad26ba6e747f1c3c1920896f2a010704bfbfac7392a1ed86"
+    },
+    {
+      "path": "calibration/T07/case.json",
+      "bytes": 316,
+      "sha256": "aa2cebf1d894292a54415ffda8f6acb667f3e61302da9c36458fcbba20833bd6"
+    },
+    {
+      "path": "calibration/T08/README.md",
+      "bytes": 277,
+      "sha256": "615393ac0cd60b0bab682a8186e29426d1fa7d700637de621ac93acbdf07b1a8"
+    },
+    {
+      "path": "calibration/T08/case.json",
+      "bytes": 328,
+      "sha256": "6d952c9a37febde9012a63ebeac5f5ba4acc91697c854b3574dba08e90c4e61a"
+    },
+    {
+      "path": "calibration/T09/README.md",
+      "bytes": 271,
+      "sha256": "0575f7e99e9bd3ee17d9d6dbf12340f07cc1d3cb2d0161cea22412fe90db8a8d"
+    },
+    {
+      "path": "calibration/T09/case.json",
+      "bytes": 311,
+      "sha256": "47533b431b06aab209af7ad8dba500d802665ebd8f96ff93aee6789f091bc28d"
+    },
+    {
+      "path": "calibration/T10/README.md",
+      "bytes": 276,
+      "sha256": "d14e5df6732b15f52fa7a7f58725ba81be1813ab16a0f144cbf35b5d100a200f"
+    },
+    {
+      "path": "calibration/T10/case.json",
+      "bytes": 339,
+      "sha256": "8b139987de73b65d0c7b73c74dcfe89d737a5189a3954c4253fe227fff625ba8"
+    },
+    {
+      "path": "calibration/T11/README.md",
+      "bytes": 271,
+      "sha256": "12143fd5d29beb6921d71d5bc69eed98ccbbe9746a202ca4a52607a853ce64ca"
+    },
+    {
+      "path": "calibration/T11/case.json",
+      "bytes": 319,
+      "sha256": "92fe9d8ed201e37c85a51b703b897e26d4a9e92c5b6aca7727f548ade9e6f772"
+    },
+    {
+      "path": "contracts/exegate-harvest/v0.1.2/LV-FORGE-AMEND-LORE-FRAGMENT-001-A01-v0.1.1.md",
+      "bytes": 16447,
+      "sha256": "4867359c7da1b908172515cef6946cc7def6d4e3b29c56edb41733d5d6c86c70"
+    },
+    {
+      "path": "contracts/exegate-harvest/v0.1.2/LV-FORGE-AMEND-LORE-HARVEST-001-A02-v0.1.2.md",
+      "bytes": 5239,
+      "sha256": "fce6b4d5b28b22b8c6bfbc0160c1c74ec313b04dddeb41fe5a7e81051f655fc8"
+    },
+    {
+      "path": "contracts/exegate-harvest/v0.1.2/LV-FORGE-CALIBRATION-CLOSEOUT-v0.1.2.md",
+      "bytes": 974,
+      "sha256": "f4d4584142df4ea1e906639b906b025c8b20f9890b3678f8220db8168d6267ba"
+    },
+    {
+      "path": "contracts/exegate-harvest/v0.1.2/LV-FORGE-CONTRACT-EXEGATE-HARVEST-001-v0.1.2.md",
+      "bytes": 17196,
+      "sha256": "4659395927e0411ebd8501aec48c2d9190398ba2ef88c33e08d0fd4c1d89fc5b"
+    },
+    {
+      "path": "contracts/exegate-harvest/v0.1.2/LV-FORGE-SPEC-LORE-FRAGMENT-001-v0.1.2.md",
+      "bytes": 24611,
+      "sha256": "0ca3a9ab89245c3f8e11439154bdfe1cf0b4de37e849803bef67c7a1053675c1"
+    },
+    {
+      "path": "contracts/exegate-harvest/v0.1.2/RATIFICATION-MANIFEST-v0.1.2.md",
+      "bytes": 1109,
+      "sha256": "a954098a6de545d605534556e2c7f0a022542d84e1354820a2f7f2d82ec20c61"
+    },
+    {
+      "path": "contracts/exegate-harvest/v0.1.2/STANDALONE-ADOPTION-NOTE-v0.1.2.md",
+      "bytes": 572,
+      "sha256": "e1bbaf46494629b7e7fe9b1f9c699e80073187ab8de5c91bdaf4e1abf90fce70"
+    },
+    {
+      "path": "pyproject.toml",
+      "bytes": 871,
+      "sha256": "6bb6287045b4a696bebd1f3710763e0fc72f5cdb176be327ad2f45e057588fc4"
+    },
+    {
+      "path": "schemas/v0.1.2/PROCEDURAL-INVARIANTS.md",
+      "bytes": 4617,
+      "sha256": "4ccc48c14c49ef76c6d57856816edd3573c44fbebfbb4d9917a7425aa75ed65c"
+    },
+    {
+      "path": "schemas/v0.1.2/SCHEMA-CATALOG-v0.1.2.json",
+      "bytes": 1088,
+      "sha256": "a6171f013d8c4cf1742b3f5560340d1adfe3fe5ea80665f643aa9b68eaea4e7e"
+    },
+    {
+      "path": "schemas/v0.1.2/VALIDATION-REPORT.txt",
+      "bytes": 699,
+      "sha256": "782ec164fe1fc0e399a3fe68cadedf6e415c3a1cf1669ec8b4e2cf2b8c1ad492"
+    },
+    {
+      "path": "schemas/v0.1.2/examples/fragments.example.jsonl",
+      "bytes": 1808,
+      "sha256": "e7acf705c3855708309dab2798424dea55e42880b61b52c34e88c9e1fc507146"
+    },
+    {
+      "path": "schemas/v0.1.2/examples/relations.example.jsonl",
+      "bytes": 346,
+      "sha256": "4eb4d8e61d2f31c247d5274f4d35b1d6f071b5b05a1a868040bac62d29b26b4e"
+    },
+    {
+      "path": "schemas/v0.1.2/exegate-harvest-result.schema.json",
+      "bytes": 4469,
+      "sha256": "47d15e0e0e1c7dfb5ee7589202ab980098511dcf30968f31a19834f4e62b8764"
+    },
+    {
+      "path": "schemas/v0.1.2/harvest-manifest.schema.json",
+      "bytes": 3801,
+      "sha256": "e0682ff91f0f6d03735feb133404b5169e6011b2d330dabbf9428a230cb98c24"
+    },
+    {
+      "path": "schemas/v0.1.2/lore-fragment-draft.schema.json",
+      "bytes": 16024,
+      "sha256": "2af40ca2683b25b8789ba58f4ba0cf96812d81df5e126d38a75d45f78cb33ed9"
+    },
+    {
+      "path": "schemas/v0.1.2/lore-fragment-record.schema.json",
+      "bytes": 32226,
+      "sha256": "13642010ac1f8b9c470918e4ee44ded7933049e8385c411c0f98caec656c6a1f"
+    },
+    {
+      "path": "schemas/v0.1.2/lore-relation-record.schema.json",
+      "bytes": 2454,
+      "sha256": "6d98577c74c1a6c8d1c7325d1faf58bb585d243c52f78653a34eab089f69c351"
+    },
+    {
+      "path": "src/liber_harvest/__init__.py",
+      "bytes": 389,
+      "sha256": "7b7f9ec96669ce8d683f8eeada9aece99706a7ed083f055473e7a805db405edc"
+    },
+    {
+      "path": "src/liber_harvest/__main__.py",
+      "bytes": 59,
+      "sha256": "41df9ff33d90dafa6210fdb1e8f045b09ae900258357114a424f36d0c845987a"
+    },
+    {
+      "path": "src/liber_harvest/adapters/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/liber_harvest/adapters/base.py",
+      "bytes": 466,
+      "sha256": "730ab59d49c926123e7fd7b38de8f7063a2b4cd2b6fedb71ae38cd5704edba72"
+    },
+    {
+      "path": "src/liber_harvest/adapters/exegate/__init__.py",
+      "bytes": 107,
+      "sha256": "eb89d7c6106a79a8fef6b3d96503a82e9a291e54bc2d0507da503ece7bffd6b6"
+    },
+    {
+      "path": "src/liber_harvest/adapters/exegate/contract.py",
+      "bytes": 8190,
+      "sha256": "760d84352ff481d6b6745dc2a121e50af31aca0a188b099a3e55dcd05de16a1c"
+    },
+    {
+      "path": "src/liber_harvest/adapters/exegate/loader.py",
+      "bytes": 2812,
+      "sha256": "b97cb8f6bf84f90d0fb5c9c55750485d5e6d7cac400fec82578de5b9cf219ccb"
+    },
+    {
+      "path": "src/liber_harvest/adapters/exegate/models.py",
+      "bytes": 2171,
+      "sha256": "7b2d2b3829eb165dd82fb31bfe5e6fe4358d84ef5ad8702e4afa507aeefffae2"
+    },
+    {
+      "path": "src/liber_harvest/adapters/exegate/parser.py",
+      "bytes": 8232,
+      "sha256": "797234f2e893b9db009c8a55404f8afc84a6f98ec33b68ba5e951aacb662a0b4"
+    },
+    {
+      "path": "src/liber_harvest/cli.py",
+      "bytes": 5638,
+      "sha256": "5cbdb6b9e0f53710e30a0eac8bb9b9222b76c3fba2d62b7976ecbbd03c2f59c8"
+    },
+    {
+      "path": "src/liber_harvest/constants.py",
+      "bytes": 2380,
+      "sha256": "11134253bda73c1279a4a1b3bffa7941fbcffd0794b39c9f21b12e062511b0e3"
+    },
+    {
+      "path": "src/liber_harvest/exporter.py",
+      "bytes": 2245,
+      "sha256": "38e7dabce5de5c8640f8a4873e16ed57bf46dbc92393c1439e9eec9fd65185c3"
+    },
+    {
+      "path": "src/liber_harvest/identity.py",
+      "bytes": 1375,
+      "sha256": "bf949478f8e3158ba7907e7008c7e0c825c2bd038c9261a47ee73e8a96a36402"
+    },
+    {
+      "path": "src/liber_harvest/jsonutil.py",
+      "bytes": 835,
+      "sha256": "933cd8698b5abcdb6632b7fb310ceebcd8725d6da1f672c2eb93fd6b7e8cd05d"
+    },
+    {
+      "path": "src/liber_harvest/materializer.py",
+      "bytes": 1634,
+      "sha256": "c88f19760ab66151bcb4ef140cf5a7f7dc92ceb37dca4bd9f7bc4c25c9ad7270"
+    },
+    {
+      "path": "src/liber_harvest/models.py",
+      "bytes": 22697,
+      "sha256": "5f83a53f86cd696dfaee7e753c75f7d6ab55441da498166f660ad08fc7cc0e45"
+    },
+    {
+      "path": "src/liber_harvest/pipeline.py",
+      "bytes": 5558,
+      "sha256": "1374c4da832576ecc954f266019286142671b24c5747ed1aaa9703c1d37a8ef7"
+    },
+    {
+      "path": "src/liber_harvest/pointers.py",
+      "bytes": 1710,
+      "sha256": "a090653603da9c054636b80c65df6310a795c55c25d380dbb5893d4b5d836ef3"
+    },
+    {
+      "path": "src/liber_harvest/provenance.py",
+      "bytes": 2629,
+      "sha256": "0641b5d57461e6f563d9c9768e99ae732acb1ac0f03b2b294ca04eefa7c295ab"
+    },
+    {
+      "path": "src/liber_harvest/providers/__init__.py",
+      "bytes": 183,
+      "sha256": "6a898136df50a8cd4ae6d843a455b6f45708970ae9705705e83d15b42375e51d"
+    },
+    {
+      "path": "src/liber_harvest/providers/base.py",
+      "bytes": 403,
+      "sha256": "ab43d747c2e294cdde155b9ecd9ea44ecc03802138de3d25bb94012006a3574c"
+    },
+    {
+      "path": "src/liber_harvest/providers/lmstudio.py",
+      "bytes": 3853,
+      "sha256": "629603c651a76f4641771bb1170bf3a770007730f50404a1ec8d3cd697f91f3a"
+    },
+    {
+      "path": "src/liber_harvest/providers/static.py",
+      "bytes": 905,
+      "sha256": "e3bf91424b02e8ee97bc4b3d5d127dfb848f517996799b6e033dcb86753dfbcf"
+    },
+    {
+      "path": "src/liber_harvest/py.typed",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/liber_harvest/storage/__init__.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/liber_harvest/storage/jsonl.py",
+      "bytes": 1471,
+      "sha256": "15b53ab7c939487144c0df878efb47f6d8dc6698644c6e57fcf171de0c3a4e35"
+    },
+    {
+      "path": "src/liber_harvest/storage/manifest.py",
+      "bytes": 1320,
+      "sha256": "d0df040d9f2d3194fa4d1d18f7b804f9cda511169b96442bc8be73a272167286"
+    },
+    {
+      "path": "src/liber_harvest/validation.py",
+      "bytes": 7995,
+      "sha256": "88c0306236652e36307f38e53bf8a30af5badd8d4070f104c19ffdeac8a846ff"
+    },
+    {
+      "path": "tests/conftest.py",
+      "bytes": 1405,
+      "sha256": "2d44bf28b3148edcfd1c7790dbd6a2f593344052bbdeacae02572b77846b3266"
+    },
+    {
+      "path": "tests/fixtures/T02/expectations.json",
+      "bytes": 157,
+      "sha256": "006a8150a02f20869acb2344a9b1e05e9f816f9ce4c876f075a319ff3040eff7"
+    },
+    {
+      "path": "tests/fixtures/T02/source.json",
+      "bytes": 1362,
+      "sha256": "ce69b88193d135962929cb400e4099bdbd148cdccefa2105d727869876a83015"
+    },
+    {
+      "path": "tests/fixtures/T03/expectations.json",
+      "bytes": 157,
+      "sha256": "8f4da204b0d6e98086d748dac660be13668a2b01665ce0ef37e8a0cbf3cdf9f8"
+    },
+    {
+      "path": "tests/fixtures/T03/source.json",
+      "bytes": 869,
+      "sha256": "b8ba0210f6cc30329a17d33f74eed370014d3aca6fc806b90f7c9664610c54f9"
+    },
+    {
+      "path": "tests/fixtures/T04/expectations.json",
+      "bytes": 157,
+      "sha256": "f5625751b6ae872caf881995ae3febd556d1a899034e76945242fe2d7dd0509f"
+    },
+    {
+      "path": "tests/fixtures/T04/source.json",
+      "bytes": 873,
+      "sha256": "6a15287b872a9627da0d1fc500208e1083fcca2cfd32c63352a0f670baff7bcb"
+    },
+    {
+      "path": "tests/fixtures/T10/expectations.json",
+      "bytes": 157,
+      "sha256": "9981e0b7e0c71c135a7d1f120c2474f60486195eebabfd4292d8e370f85722ac"
+    },
+    {
+      "path": "tests/fixtures/T10/source.json",
+      "bytes": 730,
+      "sha256": "21aa2ca614c058c66e4eb37a4be86476775a7e04703b365ceacbdf0e3eb47d25"
+    },
+    {
+      "path": "tests/regression/test_frozen_regressions.py",
+      "bytes": 4461,
+      "sha256": "11542dd7d0da1c06ad70766c3c4ce0ac7ca2806f2f67a9ffbb3957cd73fdd331"
+    },
+    {
+      "path": "tests/unit/test_exegate_adapter.py",
+      "bytes": 1120,
+      "sha256": "196945fb35742600fe2a8e8524116b3a71f72b615cc31fc13024472a09f2b67d"
+    },
+    {
+      "path": "tests/unit/test_export_and_schemas.py",
+      "bytes": 1809,
+      "sha256": "61b5060d99c6aa236d3a952892eee5fd3cea8aa9d911bb2e0c4534a2e83ecf05"
+    },
+    {
+      "path": "tests/unit/test_models_and_materialization.py",
+      "bytes": 2232,
+      "sha256": "acdcacdb0262b5ed18bd8b8832c97ebbe5b2b6a451a59f3f65f08bad98ddee14"
+    },
+    {
+      "path": "tests/unit/test_pointers_and_provider.py",
+      "bytes": 879,
+      "sha256": "ac4c58c801e92a3efd2242bc05f24d48a30b1d7a5a1baffa728bc3e880391600"
+    },
+    {
+      "path": "tests/unit/test_validation.py",
+      "bytes": 2216,
+      "sha256": "5e23700d0c31c31df415686ca6420474299173fb9bc23ec8668289c0c0cd2234"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "package": "Liber Harvest JSON Schemas",
+  "version": "0.1.2",
+  "draft": "https://json-schema.org/draft/2020-12/schema",
+  "schemas": [
+    {
+      "record": "lore_fragment_materialized_jsonl",
+      "file": "lore-fragment-record.schema.json",
+      "id": "https://lv-forge.local/schemas/lore-fragment-record-v0.1.2.schema.json"
+    },
+    {
+      "record": "lore_relation_jsonl",
+      "file": "lore-relation-record.schema.json",
+      "id": "https://lv-forge.local/schemas/lore-relation-record-v0.1.2.schema.json"
+    },
+    {
+      "record": "lore_fragment_draft",
+      "file": "lore-fragment-draft.schema.json",
+      "id": "https://lv-forge.local/schemas/lore-fragment-draft-v0.1.2.schema.json"
+    },
+    {
+      "record": "exegate_harvest_result",
+      "file": "exegate-harvest-result.schema.json",
+      "id": "https://lv-forge.local/schemas/exegate-harvest-result-v0.1.2.schema.json"
+    },
+    {
+      "record": "harvest_manifest",
+      "file": "harvest-manifest.schema.json",
+      "id": "https://lv-forge.local/schemas/harvest-manifest-v0.1.2.schema.json"
+    }
+  ]
+}

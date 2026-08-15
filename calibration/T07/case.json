@@ -1,0 +1,12 @@
+{
+  "case_id": "T07",
+  "historical_source_key": "song_005",
+  "purpose": "doctrine-heavy repeated concepts",
+  "targets": [
+    "intra_source_dedupe",
+    "pipeline_wrapper_stripping"
+  ],
+  "status": "calibration",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

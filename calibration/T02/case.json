@@ -1,0 +1,13 @@
+{
+  "case_id": "T02",
+  "historical_source_key": "EXE-BUNDLE-V-N-01",
+  "purpose": "fully structured Symbols/Rituals and legacy bindings",
+  "targets": [
+    "structured_objects",
+    "name_restraint",
+    "seed_phrase_restraint"
+  ],
+  "status": "frozen-regression",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

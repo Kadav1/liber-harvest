@@ -1,0 +1,13 @@
+{
+  "case_id": "T10",
+  "historical_source_key": "song_012",
+  "purpose": "competing interpretations and contradiction",
+  "targets": [
+    "lf15_modality",
+    "contradiction_preservation",
+    "lf16"
+  ],
+  "status": "frozen-regression",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

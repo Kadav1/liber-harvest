@@ -1,0 +1,17 @@
+{
+  "song_title": "Contradiction Fixture",
+  "analysis_mode": "Infernal Exegate v5.4 UNIFIED",
+  "prima_materia_raw": "Crimson rain falls over a settlement.",
+  "vectors_raw": "Its meaning is disputed.",
+  "psych_pathology_raw": "Witnesses seek certainty in incompatible explanations.",
+  "atmospherics_raw": "Wet roofs, red runoff, metallic smell.",
+  "scene_hooks": [
+    {
+      "hook_title": "Two Readings",
+      "hook_text_raw": "An outside chronicler might record the crimson rain as a plague omen, while internal documents could interpret the same event as evidence that a supernatural opening has occurred."
+    }
+  ],
+  "seed_lines": [],
+  "metadata_raw": "Contradictory interpretation test",
+  "naming_ids_raw": null
+}

@@ -1,0 +1,1 @@
+{"schema_version": "lore-relation/0.1.2", "relation_id": "LRL-ABCDEF123456", "relation": "related_to", "source_fragment_id": "LFR-CUS-7A41C0B920ED", "target_fragment_id": "LFR-BEL-123456ABCDEF", "origin": "relation_hint", "evidence_fragment_ids": ["LFR-CUS-7A41C0B920ED"], "note": "Example relation record.", "harvest_run_id": "EXAMPLE-RUN-001"}

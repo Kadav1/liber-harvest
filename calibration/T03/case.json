@@ -1,0 +1,13 @@
+{
+  "case_id": "T03",
+  "historical_source_key": "song_001",
+  "purpose": "scene-hook/atmosphere-heavy proposal material",
+  "targets": [
+    "lf15_modality",
+    "pipeline_wrapper_stripping",
+    "seed_phrase_restraint"
+  ],
+  "status": "frozen-regression",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

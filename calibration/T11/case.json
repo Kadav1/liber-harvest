@@ -1,0 +1,12 @@
+{
+  "case_id": "T11",
+  "historical_source_key": "song_013",
+  "purpose": "null IDs and malformed legacy metadata",
+  "targets": [
+    "broken_source_resilience",
+    "null_id_resilience"
+  ],
+  "status": "calibration",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

@@ -1,0 +1,9 @@
+{
+  "case_id": "T02",
+  "must_preserve": [
+    "modality",
+    "evidence_layer",
+    "exact_provenance"
+  ],
+  "contract_version": "exegate-harvest/0.1.2"
+}

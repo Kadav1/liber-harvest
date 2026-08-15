@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lv-forge.local/schemas/exegate-harvest-result-v0.1.2.schema.json",
+  "title": "LV-Forge Exegate Harvest Result v0.1.2",
+  "description": "Complete extraction-model result before deterministic materialization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "source",
+    "fragments",
+    "coverage",
+    "discarded",
+    "warnings"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "exegate-harvest/0.1.2"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pipeline",
+        "source_path",
+        "source_sha256",
+        "source_title",
+        "bundle_id"
+      ],
+      "properties": {
+        "pipeline": {
+          "const": "exegate"
+        },
+        "source_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "source_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bundle_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "fragments": {
+      "type": "array",
+      "items": {
+        "$ref": "https://lv-forge.local/schemas/lore-fragment-draft-v0.1.2.schema.json"
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "json_pointer",
+          "disposition",
+          "evidence_layer",
+          "source_modality",
+          "concept_keys"
+        ],
+        "properties": {
+          "json_pointer": {
+            "type": "string",
+            "pattern": "^(?:/(?:[^~/]|~[01])*)+$"
+          },
+          "disposition": {
+            "enum": [
+              "extracted",
+              "merged",
+              "metadata_only",
+              "empty",
+              "non_lore",
+              "unparseable"
+            ]
+          },
+          "evidence_layer": {
+            "oneOf": [
+              {
+                "enum": [
+                  "source_semantics",
+                  "exegate_interpretation",
+                  "lv_application",
+                  "generated_hook",
+                  "generated_phrase",
+                  "metadata"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_modality": {
+            "oneOf": [
+              {
+                "enum": [
+                  "asserted",
+                  "proposed",
+                  "hypothetical",
+                  "interpretive",
+                  "poetic",
+                  "ambiguous"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "concept_keys": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:_[a-z0-9]+){2,9}$"
+            }
+          }
+        }
+      }
+    },
+    "discarded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "json_pointer",
+          "reason",
+          "note"
+        ],
+        "properties": {
+          "json_pointer": {
+            "type": "string",
+            "pattern": "^(?:/(?:[^~/]|~[01])*)+$"
+          },
+          "reason": {
+            "enum": [
+              "duplicate_within_source",
+              "non_lore_metadata",
+              "identifier_only",
+              "formatting_only",
+              "empty",
+              "parser_artifact",
+              "pipeline_wrapper"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "x-lv-forge-invariants": [
+    "Every non-empty primary Exegate section MUST receive a coverage entry.",
+    "The model MUST NOT emit final fragment_id values or numeric source spans/hashes.",
+    "Pipeline-wrapper text may be discarded only when embedded lore has been separately considered for extraction."
+  ]
+}

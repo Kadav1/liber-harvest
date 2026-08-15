@@ -1,0 +1,23 @@
+{
+  "song_title": "Evidence Layer Fixture",
+  "analysis_mode": "Infernal Exegate v5.4 UNIFIED",
+  "prima_materia_raw": "A malignant growth is described in sacred language.",
+  "vectors_raw": "The Exegate interprets the growth as an inversion of grace. Through the Order lens, three drops could be administered during a hidden rite.",
+  "psych_pathology_raw": "Sufferers may come to praise their own deterioration.",
+  "rituals": [],
+  "atmospherics_raw": "Pitch-dark chamber, mineral damp, whispered praise.",
+  "scene_hooks": [
+    {
+      "hook_title": "Three Drops",
+      "hook_text_raw": "An initiate might receive three drops while surrendering a former name."
+    }
+  ],
+  "seed_lines": [
+    {
+      "seed_line": "Three drops, and the inward growth answers.",
+      "use": null
+    }
+  ],
+  "metadata_raw": "Old Alexius relevance: high",
+  "naming_ids_raw": null
+}

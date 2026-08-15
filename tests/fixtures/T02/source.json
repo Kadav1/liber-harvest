@@ -1,0 +1,44 @@
+{
+  "song_title": "Structured Fixture",
+  "analysis_mode": "Infernal Exegate v5.4 UNIFIED",
+  "prima_materia_raw": "A poisoned communal drink is used as a trial.",
+  "vectors_raw": "The drink may function as a test of surrender.",
+  "vectors": [
+    {
+      "name": "Surrender through ingestion",
+      "description": "A proposed initiation mechanism."
+    }
+  ],
+  "symbols": [
+    {
+      "name": "Chalice of Negation",
+      "literal": "A cup containing a dangerous drink.",
+      "occult": "A vessel of surrender.",
+      "psychological": "Fear is ritualized.",
+      "lv_hook": "The old Order could use such a cup during initiation."
+    }
+  ],
+  "rituals": [
+    {
+      "name": "Poisoned Sacrament",
+      "type": "ritual",
+      "description": "Members might unknowingly ingest minute doses during a communal rite."
+    }
+  ],
+  "scene_hooks": [
+    {
+      "hook_title": "Herbarium Discovery",
+      "hook_text_raw": "A novice might discover a hidden herbarium containing the ingredients."
+    }
+  ],
+  "seed_lines": [
+    {
+      "seed_line": "The poison is my prayer.",
+      "use": "mantra"
+    }
+  ],
+  "psych_pathology_raw": "Submission may be reinforced by uncertainty about the dose.",
+  "atmospherics_raw": "Bitter resin, cold metal, low lamplight.",
+  "metadata_raw": "Intensity: 4 | Texture: Venom",
+  "naming_ids_raw": "Legacy names only."
+}

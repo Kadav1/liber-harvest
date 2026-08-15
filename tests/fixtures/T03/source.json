@@ -1,0 +1,22 @@
+{
+  "song_title": "Proposal Fixture",
+  "analysis_mode": "Infernal Exegate v5.4 UNIFIED",
+  "prima_materia_raw": "Snow covers graves until inscriptions disappear.",
+  "vectors_raw": "The snow can be read as a medium of remembrance.",
+  "psych_pathology_raw": "Fear of being forgotten attaches itself to winter burial.",
+  "atmospherics_raw": "Muted wind, white fields, stone edges under snow.",
+  "scene_hooks": [
+    {
+      "hook_title": "Remote Field",
+      "hook_text_raw": "Lore Architect could build an entry in which a remote field might be consecrated for failed initiates, with snow allowed to obscure their epitaphs."
+    }
+  ],
+  "seed_lines": [
+    {
+      "seed_line": "At first light she danced for heaven; by nightfall the snow was rehearsing her absence.",
+      "use": "epitaph"
+    }
+  ],
+  "metadata_raw": "Texture: Ice",
+  "naming_ids_raw": null
+}

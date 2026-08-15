@@ -1,0 +1,13 @@
+{
+  "case_id": "T04",
+  "historical_source_key": "song_008",
+  "purpose": "legacy-bound theology and ritual outside ritual array",
+  "targets": [
+    "lf16_evidence_layers",
+    "legacy_normalization",
+    "span_materialization"
+  ],
+  "status": "frozen-regression",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

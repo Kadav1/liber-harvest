@@ -1,0 +1,14 @@
+{
+  "case_id": "T01",
+  "historical_source_key": "song_006",
+  "purpose": "distributed lore with empty structured ritual arrays",
+  "targets": [
+    "semantic_recall",
+    "empty_array_resilience",
+    "lf13",
+    "lf14"
+  ],
+  "status": "frozen-regression",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

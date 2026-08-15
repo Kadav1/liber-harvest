@@ -1,0 +1,711 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lv-forge.local/schemas/lore-fragment-draft-v0.1.2.schema.json",
+  "title": "LV-Forge Lore Fragment Draft v0.1.2",
+  "description": "Extraction-model fragment before deterministic ID/span/hash materialization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "concept_key",
+    "type",
+    "title",
+    "claim",
+    "content",
+    "domains",
+    "tags",
+    "legacy_bindings",
+    "derivation",
+    "provenance",
+    "relation_hints",
+    "review"
+  ],
+  "properties": {
+    "concept_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:_[a-z0-9]+){2,9}$"
+    },
+    "type": {
+      "enum": [
+        "person",
+        "group",
+        "institution",
+        "office",
+        "place",
+        "structure",
+        "architecture",
+        "object",
+        "relic",
+        "material",
+        "flora",
+        "creature",
+        "ritual",
+        "custom",
+        "practice",
+        "law",
+        "social_structure",
+        "economy",
+        "trade",
+        "warfare",
+        "doctrine",
+        "belief",
+        "cosmology",
+        "myth",
+        "legend",
+        "symbol",
+        "event",
+        "historical_claim",
+        "somatic",
+        "pathology",
+        "medicine",
+        "environment",
+        "language",
+        "name",
+        "phrase",
+        "motif",
+        "sensory_palette",
+        "narrative_hook",
+        "character_hook",
+        "other"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modality"
+      ],
+      "properties": {
+        "modality": {
+          "enum": [
+            "asserted",
+            "proposed",
+            "hypothetical",
+            "interpretive",
+            "poetic",
+            "ambiguous"
+          ]
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_meaning",
+        "normalized_lore",
+        "details"
+      ],
+      "properties": {
+        "source_meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "normalized_lore": {
+          "type": "string",
+          "minLength": 1
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "domains": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "religion",
+          "cosmology",
+          "ritual",
+          "institution",
+          "politics",
+          "law",
+          "society",
+          "family",
+          "economy",
+          "trade",
+          "warfare",
+          "architecture",
+          "material_culture",
+          "environment",
+          "agriculture",
+          "food",
+          "medicine",
+          "body",
+          "death",
+          "burial",
+          "history",
+          "myth",
+          "folklore",
+          "language",
+          "naming",
+          "magic",
+          "travel",
+          "infrastructure",
+          "art",
+          "music",
+          "literature",
+          "psychology"
+        ]
+      }
+    },
+    "tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"
+      }
+    },
+    "legacy_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "value",
+          "handling",
+          "note"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "character",
+              "institution",
+              "religion",
+              "cosmology",
+              "location",
+              "timeline",
+              "plot",
+              "terminology",
+              "role",
+              "structure",
+              "other"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1
+          },
+          "handling": {
+            "enum": [
+              "retained",
+              "generalized",
+              "removed_from_normalized",
+              "essential"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary_mode",
+        "operations",
+        "fidelity",
+        "inference_note"
+      ],
+      "properties": {
+        "primary_mode": {
+          "enum": [
+            "direct",
+            "decomposed",
+            "generalized",
+            "implied",
+            "merged_intra_source"
+          ]
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "direct",
+              "decomposed",
+              "generalized",
+              "implied",
+              "merged_intra_source"
+            ]
+          }
+        },
+        "fidelity": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "inference_note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "primary_mode": {
+                "const": "direct"
+              }
+            },
+            "required": [
+              "primary_mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "direct"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "primary_mode": {
+                "const": "decomposed"
+              }
+            },
+            "required": [
+              "primary_mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "decomposed"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "primary_mode": {
+                "const": "generalized"
+              }
+            },
+            "required": [
+              "primary_mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "generalized"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "primary_mode": {
+                "const": "implied"
+              }
+            },
+            "required": [
+              "primary_mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "implied"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "primary_mode": {
+                "const": "merged_intra_source"
+              }
+            },
+            "required": [
+              "primary_mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "merged_intra_source"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "direct"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operations": {
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "const": "direct"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "fidelity": {
+                "const": "low"
+              }
+            },
+            "required": [
+              "fidelity"
+            ]
+          },
+          "then": {
+            "properties": {
+              "inference_note": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "provenance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pipeline",
+          "source_path",
+          "source_sha256",
+          "source_title",
+          "bundle_id",
+          "source_item_id",
+          "circle",
+          "evidence_layer",
+          "source_modality",
+          "json_pointer",
+          "role",
+          "excerpt"
+        ],
+        "properties": {
+          "pipeline": {
+            "const": "exegate"
+          },
+          "source_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[A-Fa-f0-9]{64}$"
+          },
+          "source_title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bundle_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_item_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "circle": {
+            "enum": [
+              "prima_materia",
+              "vectors_of_corruption",
+              "symbols",
+              "psychological_pathology",
+              "ritual_extraction",
+              "atmospherics_texture",
+              "narrative_potential",
+              "seed_line_distillation",
+              "metadata_assessment",
+              "naming_ids"
+            ]
+          },
+          "evidence_layer": {
+            "enum": [
+              "source_semantics",
+              "exegate_interpretation",
+              "lv_application",
+              "generated_hook",
+              "generated_phrase",
+              "metadata"
+            ]
+          },
+          "source_modality": {
+            "enum": [
+              "asserted",
+              "proposed",
+              "hypothetical",
+              "interpretive",
+              "poetic",
+              "ambiguous"
+            ]
+          },
+          "json_pointer": {
+            "type": "string",
+            "pattern": "^(?:/(?:[^~/]|~[01])*)+$"
+          },
+          "role": {
+            "enum": [
+              "primary",
+              "supporting",
+              "duplicate"
+            ]
+          },
+          "excerpt": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "const": "primary"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "relation_hints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "relation"
+        ],
+        "properties": {
+          "relation": {
+            "enum": [
+              "related_to",
+              "component_of",
+              "variant_of",
+              "contradicts",
+              "requires",
+              "produces",
+              "performed_at",
+              "located_in",
+              "associated_with",
+              "derived_from"
+            ]
+          },
+          "target_concept_key": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:_[a-z0-9]+){2,9}$"
+          },
+          "target_fragment_id": {
+            "type": "string",
+            "pattern": "^LFR-(?:PER|GRP|INS|OFF|PLC|STR|ARC|OBJ|REL|MAT|FLO|CRE|RIT|CUS|PRA|LAW|SOC|ECO|TRD|WAR|DOC|BEL|COS|MYT|LEG|SYM|EVT|HIS|SOM|PAT|MED|ENV|LAN|NAM|PHR|MOT|SEN|NAR|CHR|OTH)-[A-F0-9]{12}$"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "anyOf": [
+          {
+            "required": [
+              "target_concept_key"
+            ]
+          },
+          {
+            "required": [
+              "target_fragment_id"
+            ]
+          }
+        ]
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "reasons"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "reasons": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "source_ambiguity",
+              "heavy_generalization",
+              "possible_over_split",
+              "possible_under_split",
+              "possible_duplicate",
+              "mixed_concepts",
+              "uncertain_type",
+              "broken_source_structure",
+              "legacy_dependency_heavy",
+              "provenance_precision_reduced",
+              "provenance_span_ambiguous",
+              "provenance_excerpt_unresolved",
+              "other"
+            ]
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "required": {
+                "const": true
+              }
+            },
+            "required": [
+              "required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reasons": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "required": {
+                "const": false
+              }
+            },
+            "required": [
+              "required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reasons": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "claim": {
+            "properties": {
+              "modality": {
+                "const": "ambiguous"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review": {
+            "properties": {
+              "required": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "derivation": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "merged_intra_source"
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "minItems": 2
+          }
+        }
+      }
+    }
+  ],
+  "x-lv-forge-invariants": [
+    "source_span.end MUST be greater than source_span.start.",
+    "source_span.text_sha256 MUST equal SHA-256 of the exact JSON-pointer substring source_value[start:end].",
+    "anchor_sha256 MUST equal SHA-256 of the complete JSON-pointer target after source decoding, with no normalization.",
+    "claim.modality MUST NOT be stronger than the supporting provenance source_modality permits.",
+    "When claim.modality is ambiguous, review.required MUST be true and review should identify source ambiguity.",
+    "Derivation operation order is semantically significant and MUST be preserved during serialization."
+  ]
+}

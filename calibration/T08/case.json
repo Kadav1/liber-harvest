@@ -1,0 +1,12 @@
+{
+  "case_id": "T08",
+  "historical_source_key": "song_010",
+  "purpose": "bloodline/cosmology and imported terminology",
+  "targets": [
+    "evidence_layer_separation",
+    "legacy_normalization"
+  ],
+  "status": "calibration",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

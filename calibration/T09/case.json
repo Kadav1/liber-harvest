@@ -1,0 +1,12 @@
+{
+  "case_id": "T09",
+  "historical_source_key": "song_011",
+  "purpose": "atmosphere + repetition + implied lore",
+  "targets": [
+    "merged_intra_source",
+    "sensory_palette"
+  ],
+  "status": "calibration",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

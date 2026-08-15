@@ -1,0 +1,12 @@
+{
+  "case_id": "T05",
+  "historical_source_key": "song_002",
+  "purpose": "gateway cosmology, locations, rites",
+  "targets": [
+    "decomposition",
+    "taxonomy"
+  ],
+  "status": "calibration",
+  "source_distribution": "external-legacy-corpus",
+  "contract_version": "exegate-harvest/0.1.2"
+}

@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lv-forge.local/schemas/harvest-manifest-v0.1.2.schema.json",
+  "title": "LV-Forge Lore Harvest Manifest v0.1.2",
+  "description": "Per-source harvest_manifest.json after materialization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_version",
+    "run_id",
+    "contract_version",
+    "fragment_schema_version",
+    "source",
+    "counts",
+    "artifacts",
+    "warnings",
+    "created_at"
+  ],
+  "properties": {
+    "manifest_version": {
+      "const": "lore-harvest-manifest/0.1.2"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contract_version": {
+      "const": "exegate-harvest/0.1.2"
+    },
+    "fragment_schema_version": {
+      "const": "lore-fragment/0.1.2"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pipeline",
+        "source_path",
+        "source_sha256",
+        "source_title",
+        "bundle_id"
+      ],
+      "properties": {
+        "pipeline": {
+          "const": "exegate"
+        },
+        "source_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "source_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bundle_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fragments",
+        "coverage_entries",
+        "discarded",
+        "warnings",
+        "review_required"
+      ],
+      "properties": {
+        "fragments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coverage_entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "discarded": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warnings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "review_required": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fragments_jsonl",
+        "run_json"
+      ],
+      "properties": {
+        "fragments_jsonl": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256",
+            "records"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[A-Fa-f0-9]{64}$"
+            },
+            "records": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "run_json": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[A-Fa-f0-9]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "x-lv-forge-invariants": [
+    "Artifact SHA-256 values MUST match the bytes written to disk.",
+    "Artifact record counts MUST match the corresponding serialized files."
+  ]
+}
