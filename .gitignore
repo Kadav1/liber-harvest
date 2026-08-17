@@ -11,3 +11,5 @@ build/
 .env
 harvest/
 calibration/**/actual/
+# Local historical source corpus (runtime input, not repository content)
+data/
