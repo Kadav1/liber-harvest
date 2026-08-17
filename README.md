@@ -10,12 +10,12 @@ Liber Harvest does **not** depend on LV-Forge. LV-Forge, Obsidian tooling, or an
 
 ## Current release
 
-- Application version: **0.1.3**
+- Application version: **0.1.4**
 - Frozen semantic contract: **`exegate-harvest/0.1.2`**
 - Lore Fragment schema: **`lore-fragment/0.1.2`**
 - Frozen clauses: **LF-01 through LF-16**
 
-Version 0.1.3 is an **operator/usability release**. It does not revise the frozen v0.1.2 Lore Fragment or Exegate Harvest semantics.
+Version 0.1.4 is an **operator/usability release**. It does not revise the frozen v0.1.2 Lore Fragment or Exegate Harvest semantics.
 
 ---
 
@@ -166,7 +166,7 @@ The Harvest system instructions are embedded in Liber Harvest and sent through t
 
 ## 4.1 Recommended model profile
 
-The v0.1.3 operational default is:
+The v0.1.4 operational default is:
 
 ```text
 qwen/qwen3.6-35b-a3b
@@ -361,7 +361,7 @@ liber-harvest harvest exegate \
   --out harvest
 ```
 
-Current `--all` behavior is intentionally simple: it discovers `song_*.json` files directly under the selected source root. Bundle-directory recursion is not part of v0.1.3.
+Current `--all` behavior is intentionally simple: it discovers `song_*.json` files directly under the selected source root. Bundle-directory recursion is not part of v0.1.4.
 
 ---
 
@@ -479,4 +479,4 @@ The standalone architecture and source-tree baseline remain governed by:
 - `contracts/exegate-harvest/v0.1.2/`
 - `schemas/v0.1.2/`
 
-Application v0.1.3 improves operation and provider control while preserving that frozen semantic and architectural boundary.
+Application v0.1.4 improves operation and provider control while preserving that frozen semantic and architectural boundary.

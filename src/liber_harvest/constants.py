@@ -6,7 +6,7 @@ CONTRACT_VERSION = "exegate-harvest/0.1.2"
 FRAGMENT_SCHEMA_VERSION = "lore-fragment/0.1.2"
 RELATION_SCHEMA_VERSION = "lore-relation/0.1.2"
 MANIFEST_VERSION = "lore-harvest-manifest/0.1.2"
-EXTRACTOR_VERSION = "0.1.3"
+EXTRACTOR_VERSION = "0.1.4"
 
 TYPE_CODES: dict[str, str] = {
     "person": "PER", "group": "GRP", "institution": "INS", "office": "OFF",

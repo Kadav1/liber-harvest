@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any, Literal
+from enum import StrEnum
+from typing import Any
 
 import httpx
 
@@ -11,7 +12,15 @@ from ..adapters.exegate.contract import EXEGATE_HARVEST_SYSTEM_PROMPT
 from ..jsonutil import ModelResponseError, parse_json_object
 from ..models import HarvestInputEnvelope
 
-ReasoningMode = Literal["off", "low", "medium", "high", "on"]
+class ReasoningMode(StrEnum):
+    """LM Studio reasoning modes exposed safely through Typer/Click."""
+
+    OFF = "off"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    ON = "on"
+
 
 
 def normalize_lmstudio_base(url: str) -> str:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "liber-harvest"
-version = "0.1.3"
+version = "0.1.4"
 description = "Provenance-preserving historical lore recovery for Liber Vacuitatis"
 readme = "README.md"
 requires-python = ">=3.12"

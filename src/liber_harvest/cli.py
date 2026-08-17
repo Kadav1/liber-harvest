@@ -27,7 +27,7 @@ console = Console()
 DEFAULT_LM_STUDIO_URL = "http://127.0.0.1:1234"
 DEFAULT_MODEL = "qwen/qwen3.6-35b-a3b"
 DEFAULT_CONTEXT_LENGTH = 65536
-DEFAULT_REASONING: ReasoningMode = "off"
+DEFAULT_REASONING = ReasoningMode.OFF
 
 
 def _provider(

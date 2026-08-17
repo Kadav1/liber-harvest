@@ -1,9 +1,10 @@
 from pathlib import Path
 
+import typer
 from typer.testing import CliRunner
 
 from liber_harvest.cli import DEFAULT_MODEL, _provider, app
-from liber_harvest.providers.lmstudio import LMStudioProvider
+from liber_harvest.providers.lmstudio import LMStudioProvider, ReasoningMode
 
 runner = CliRunner()
 
@@ -26,19 +27,31 @@ def test_provider_uses_operator_defaults(monkeypatch):
         temperature=0.1,
         max_output_tokens=32768,
         context_length=65536,
-        reasoning="off",
+        reasoning=ReasoningMode.OFF,
         timeout=600.0,
     )
     assert isinstance(provider, LMStudioProvider)
     assert provider.model == DEFAULT_MODEL
     assert provider.base_url == "http://127.0.0.1:1234"
     assert provider.context_length == 65536
-    assert provider.reasoning == "off"
+    assert provider.reasoning == ReasoningMode.OFF
 
 
 def test_lmstudio_token_header():
     provider = LMStudioProvider(base_url="http://127.0.0.1:1234", model="example", api_token="secret")
     assert provider._headers() == {"Authorization": "Bearer secret"}
+
+
+def test_cli_tree_builds_with_declared_reasoning_enum():
+    # Regression for v0.1.3: typing.Literal caused Typer 0.16 to fail before
+    # command parsing with "Type not yet supported". Building the complete
+    # command tree must succeed without contacting LM Studio.
+    command = typer.main.get_command(app)
+    assert command is not None
+    result = runner.invoke(app, ["harvest", "exegate", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "--reasoning" in result.output
+    assert "off" in result.output
 
 
 def test_doctor_passes_with_loaded_compatible_model(tmp_path: Path, monkeypatch):
