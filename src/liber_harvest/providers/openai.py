@@ -1,4 +1,4 @@
-"""LM Studio native v1 chat provider."""
+"""Hosted OpenAI Responses API provider."""
 from __future__ import annotations
 
 import json
@@ -13,91 +13,94 @@ from ..jsonutil import ModelResponseError, parse_json_object
 from ..models import HarvestInputEnvelope
 
 
-class ReasoningMode(StrEnum):
-    """LM Studio reasoning modes exposed safely through Typer/Click."""
-
-    OFF = "off"
+class OpenAIReasoning(StrEnum):
+    NONE = "none"
+    MINIMAL = "minimal"
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
-    ON = "on"
+    XHIGH = "xhigh"
 
 
-def normalize_lmstudio_base(url: str) -> str:
+def normalize_openai_base(url: str) -> str:
     base = url.rstrip("/")
-    if base.endswith("/v1"):
-        base = base[:-3]
-    return base.rstrip("/")
+    if not base.endswith("/v1"):
+        base += "/v1"
+    return base
 
 
-class LMStudioProvider:
-    """Call LM Studio's native ``/api/v1/chat`` endpoint.
+class OpenAIProvider:
+    """Use OpenAI's hosted Responses API as the semantic extraction backend.
 
-    Liber Harvest owns the system prompt. The LM Studio UI should not inject a
-    second Harvest-specific system prompt. ``context_length`` and ``reasoning``
-    are sent per request so a run is not silently governed by unrelated UI
-    defaults.
+    The provider only produces draft extraction JSON. Stable IDs, provenance
+    spans, hashes, materialization and output manifests remain deterministic
+    responsibilities of Liber Harvest.
     """
 
     def __init__(
         self,
         *,
-        base_url: str,
-        model: str,
-        temperature: float = 0.1,
+        api_key: str,
+        model: str = "gpt-5.6",
+        base_url: str = "https://api.openai.com/v1",
+        reasoning: OpenAIReasoning = OpenAIReasoning.LOW,
         max_output_tokens: int = 32768,
-        context_length: int = 65536,
-        reasoning: ReasoningMode = ReasoningMode.OFF,
         timeout: float = 600.0,
         http_retries: int = 2,
-        api_token: str | None = None,
     ):
-        self.base_url = normalize_lmstudio_base(base_url)
+        if not api_key.strip():
+            raise ValueError("OpenAI API key must not be empty")
+        self.api_key = api_key
         self.model = model
-        self.temperature = temperature
-        self.max_output_tokens = max_output_tokens
-        self.context_length = context_length
+        self.base_url = normalize_openai_base(base_url)
         self.reasoning = reasoning
+        self.max_output_tokens = max_output_tokens
         self.timeout = timeout
         self.http_retries = max(0, http_retries)
-        self.api_token = api_token
 
     def _headers(self) -> dict[str, str]:
-        if not self.api_token:
-            return {}
-        return {"Authorization": f"Bearer {self.api_token}"}
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
 
-    def list_models(self) -> dict[str, Any]:
-        with httpx.Client(timeout=min(self.timeout, 30.0)) as client:
-            response = client.get(f"{self.base_url}/api/v1/models", headers=self._headers())
-        response.raise_for_status()
-        body = response.json()
-        if not isinstance(body, dict) or not isinstance(body.get("models"), list):
-            raise ValueError("LM Studio /api/v1/models returned an unexpected response")
-        return body
+    @staticmethod
+    def _extract_output_text(body: dict[str, Any]) -> str:
+        convenience = body.get("output_text")
+        if isinstance(convenience, str) and convenience.strip():
+            return convenience
+
+        parts: list[str] = []
+        for item in body.get("output") or []:
+            if not isinstance(item, dict) or item.get("type") != "message":
+                continue
+            for content in item.get("content") or []:
+                if not isinstance(content, dict):
+                    continue
+                if content.get("type") == "output_text" and content.get("text"):
+                    parts.append(str(content["text"]))
+        if parts:
+            return "".join(parts)
+        raise ValueError("OpenAI response did not contain output text")
 
     def model_status(self) -> dict[str, Any] | None:
-        """Return the requested model's model-list record, if installed."""
-        for item in self.list_models().get("models", []):
-            if not isinstance(item, dict):
-                continue
-            keys = {str(item.get("key") or ""), str(item.get("display_name") or "")}
-            for instance in item.get("loaded_instances") or []:
-                if isinstance(instance, dict):
-                    keys.add(str(instance.get("id") or ""))
-            if self.model in keys:
-                return item
-        return None
+        with httpx.Client(timeout=min(self.timeout, 30.0)) as client:
+            response = client.get(f"{self.base_url}/models/{self.model}", headers=self._headers())
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        body = response.json()
+        if not isinstance(body, dict):
+            raise ValueError("OpenAI model lookup returned an unexpected response")
+        return body
 
     def _request(self, *, input_text: str, system_prompt: str) -> str:
         payload = {
             "model": self.model,
+            "instructions": system_prompt,
             "input": input_text,
-            "system_prompt": system_prompt,
-            "temperature": self.temperature,
+            "reasoning": {"effort": str(self.reasoning)},
             "max_output_tokens": self.max_output_tokens,
-            "context_length": self.context_length,
-            "reasoning": str(self.reasoning),
             "store": False,
         }
         last_exc: Exception | None = None
@@ -105,35 +108,22 @@ class LMStudioProvider:
             try:
                 with httpx.Client(timeout=self.timeout) as client:
                     response = client.post(
-                        f"{self.base_url}/api/v1/chat", json=payload, headers=self._headers()
+                        f"{self.base_url}/responses", json=payload, headers=self._headers()
                     )
                 if (response.status_code == 429 or response.status_code >= 500) and attempt < self.http_retries:
                     time.sleep(min(2**attempt, 4))
                     continue
                 response.raise_for_status()
                 body = response.json()
-                for item in body.get("output", []):
-                    if item.get("type") != "message":
-                        continue
-                    content = item.get("content", "")
-                    if isinstance(content, str):
-                        return content
-                    if isinstance(content, list):
-                        parts = []
-                        for part in content:
-                            if isinstance(part, dict):
-                                value = part.get("text") or part.get("content")
-                                if value:
-                                    parts.append(str(value))
-                        if parts:
-                            return "".join(parts)
-                raise ValueError("LM Studio response did not contain a message output")
+                if not isinstance(body, dict):
+                    raise ValueError("OpenAI Responses API returned an unexpected response")
+                return self._extract_output_text(body)
             except (httpx.TimeoutException, httpx.NetworkError) as exc:
                 last_exc = exc
                 if attempt >= self.http_retries:
                     raise
                 time.sleep(min(2**attempt, 4))
-        raise RuntimeError("LM Studio request failed") from last_exc
+        raise RuntimeError("OpenAI request failed") from last_exc
 
     def extract(self, envelope: HarvestInputEnvelope) -> dict[str, Any]:
         text = self._request(

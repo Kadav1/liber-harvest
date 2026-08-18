@@ -2,57 +2,66 @@
 
 **Liber Harvest** is the standalone, provenance-preserving historical lore recovery tool for **Liber Vacuitatis**.
 
-Its job is deliberately narrow:
+Its responsibility is narrow:
 
 > ingest historical material, recover independently reusable lore, preserve exact provenance and epistemic status, and emit a normalized file-first library without deciding canon.
 
-Liber Harvest does **not** depend on LV-Forge. LV-Forge, Obsidian tooling, or any future authoring system may consume the immutable file contract emitted by Liber Harvest.
+Liber Harvest does **not** depend on LV-Forge. LV-Forge, Obsidian tooling, or another downstream system may consume its file contract.
 
 ## Current release
 
-- Application version: **0.1.4**
+- Application: **0.1.5**
 - Frozen semantic contract: **`exegate-harvest/0.1.2`**
 - Lore Fragment schema: **`lore-fragment/0.1.2`**
 - Frozen clauses: **LF-01 through LF-16**
 
-Version 0.1.4 is an **operator/usability release**. It does not revise the frozen v0.1.2 Lore Fragment or Exegate Harvest semantics.
+Application v0.1.5 changes provider operation only. It does not revise the frozen v0.1.2 lore semantics.
 
 ---
 
-# 1. What runs where
+## 1. Execution model
+
+Liber Harvest has a deterministic core and a replaceable semantic-extraction provider.
 
 ```text
-Historical Exegate JSON
+Historical Exegate source
         │
         ▼
-Liber Harvest source adapter
+Exegate adapter
         │
         ▼
-LM Studio local model
-  semantic extraction only
+Semantic extraction provider
+   ├── OpenAI       hosted
+   ├── LM Studio    local
+   └── Static       saved response, no live inference
         │
         ▼
 Lore Fragment drafts
         │
         ▼
-Liber Harvest deterministic core
-  validation
-  exact provenance resolution
-  source spans + SHA-256
-  deterministic LFR IDs
-  JSONL + manifests
-        │
-        ▼
-harvest/
+Deterministic Liber Harvest core
+   ├── contract validation
+   ├── exact provenance resolution
+   ├── source spans + hashes
+   ├── deterministic LFR IDs
+   └── JSONL + manifests
 ```
 
-The language model is an **untrusted semantic extractor**. It never creates final fragment IDs, provenance hashes, or source spans. Liber Harvest materializes those deterministically after validating the model response.
+The model/provider is an **untrusted semantic extractor**. It does not control final IDs, source hashes, provenance spans, or manifests.
+
+**No live provider is selected implicitly.** A bare harvest command will not try to contact LM Studio or OpenAI.
+
+See available modes:
+
+```bash
+liber-harvest providers
+```
 
 ---
 
-# 2. Install locally
+## 2. Install
 
-Liber Harvest requires **Python 3.12+**.
+Liber Harvest requires Python 3.12+.
 
 ```bash
 git clone https://github.com/Kadav1/liber-harvest.git
@@ -70,14 +79,14 @@ Verify:
 liber-harvest version
 ```
 
-For development/testing:
+For development:
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
 ```
 
-Both commands are installed:
+Both executable names are installed:
 
 ```text
 liber-harvest
@@ -86,7 +95,7 @@ lh
 
 ---
 
-# 3. Initialize the local runtime workspace
+## 3. Create the local workspace
 
 Run once from the repository root:
 
@@ -94,278 +103,279 @@ Run once from the repository root:
 liber-harvest init
 ```
 
-This creates:
+This creates the local runtime directories:
 
 ```text
 liber-harvest/
-├── data/                       # local historical inputs; gitignored
+├── data/                         # local source corpus; gitignored
 │   ├── parsed/
-│   │   └── song_*.json
+│   │   ├── song_001.json
+│   │   ├── song_002.json
+│   │   └── ...
 │   └── bundles/
-│       └── <bundle-id>/
+│       └── EXE-BUNDLE-.../
 │           └── exegate_run.json
 │
-├── harvest/                    # generated output; gitignored
-│
-└── [application source]
+└── harvest/                      # generated output; gitignored
 ```
 
-`data/` and `harvest/` are runtime directories, not application source.
+### Parsed Exegate JSON
 
-## Where to put Exegate JSON files
-
-### Parsed historical corpus
-
-Put canonical `ExegateRun` JSON files here:
+For the historical parsed corpus, place files here:
 
 ```text
 data/parsed/song_001.json
 data/parsed/song_002.json
-data/parsed/song_003.json
 ...
 ```
 
-The batch command `--all` currently discovers `song_*.json` files in `data/parsed/`.
+### Existing bundle directories
 
-### Existing Exegate bundle
-
-You may keep a bundle intact:
+An intact Exegate bundle may instead be placed here:
 
 ```text
 data/bundles/EXE-BUNDLE-V-N-01/
 └── exegate_run.json
 ```
 
-Liber Harvest accepts either the directory:
-
-```bash
-liber-harvest harvest exegate data/bundles/EXE-BUNDLE-V-N-01
-```
-
-or the JSON directly:
-
-```bash
-liber-harvest harvest exegate data/bundles/EXE-BUNDLE-V-N-01/exegate_run.json
-```
-
-Keeping inputs below the project root also gives stable provenance paths such as `data/parsed/song_006.json` instead of machine-specific absolute paths.
+Liber Harvest accepts either the bundle directory or the JSON file directly.
 
 ---
 
-# 4. LM Studio setup
+## 4. Choose a provider
 
-Liber Harvest uses LM Studio's **native v1 REST API** and sends requests to:
+### OpenAI: no LM Studio required
 
-```text
-POST http://127.0.0.1:1234/api/v1/chat
-```
+Use this for automatic harvesting through the hosted OpenAI API.
 
-The Harvest system instructions are embedded in Liber Harvest and sent through the API automatically.
-
-**Do not paste a second Liber Harvest system prompt into the LM Studio UI.** Leave any manually configured system prompt blank/default for this workflow.
-
-## 4.1 Recommended model profile
-
-The v0.1.4 operational default is:
+The default OpenAI model for v0.1.5 is:
 
 ```text
-qwen/qwen3.6-35b-a3b
+gpt-5.6
 ```
 
-Recommended Harvest profile:
-
-```text
-reasoning:          off
-context length:     65,536
-Harvest temperature: 0.1
-max output tokens:  32,768
-request timeout:    600 seconds
-```
-
-This model choice is an **operational default, not part of the frozen lore contract**. It may be changed after comparative calibration without changing LF-01 through LF-16.
-
-The 35B-A3B model requires a comparatively capable machine. For lower-memory testing, use a smaller current Qwen model such as `qwen/qwen3.5-9b`, but treat smaller-model runs as exploratory until they have passed the Harvest calibration suite.
-
-## 4.2 Download the model
-
-In LM Studio's UI, search for the model above and download an appropriate quantization for your hardware.
-
-Or with the LM Studio CLI:
+Set your API key:
 
 ```bash
-lms get qwen/qwen3.6-35b-a3b
+export OPENAI_API_KEY="your-api-key"
 ```
 
-List downloaded models:
+Check readiness:
 
 ```bash
-lms ls --llm
+liber-harvest doctor \
+  --provider openai \
+  --source data/parsed/song_001.json
 ```
 
-Estimate memory before loading:
+Run one harvest:
 
 ```bash
-lms load --estimate-only qwen/qwen3.6-35b-a3b --context-length 65536
+liber-harvest harvest exegate \
+  data/parsed/song_001.json \
+  --provider openai
 ```
 
-## 4.3 Start the local server
+Explicit profile:
 
 ```bash
-lms server start --port 1234 --bind 127.0.0.1
-```
-
-Check it:
-
-```bash
-lms server status
-```
-
-For this workflow, keep the server on `127.0.0.1`. CORS is not required.
-
-## 4.4 Load the model
-
-```bash
-lms load qwen/qwen3.6-35b-a3b \
-  --context-length 65536 \
-  --gpu max
-```
-
-If `--gpu max` is unsuitable for your hardware, omit it and let LM Studio choose automatically, or use a lower offload setting.
-
-Check loaded models:
-
-```bash
-lms ps
-```
-
-## 4.5 Authentication
-
-For a localhost-only server, authentication is optional.
-
-If you enable LM Studio API-token authentication, set the token for Liber Harvest without placing it on the command line:
-
-```bash
-export LIBER_HARVEST_LM_STUDIO_TOKEN='your-token'
-```
-
-Liber Harvest sends it as a Bearer token.
-
----
-
-# 5. Check the complete setup before harvesting
-
-Run:
-
-```bash
-liber-harvest doctor
-```
-
-It checks:
-
-- runtime input directories
-- output write access
-- LM Studio connectivity
-- default/requested model visibility
-- whether the model is loaded
-- requested context length
-- requested reasoning mode
-
-To include a real source parse check:
-
-```bash
-liber-harvest doctor --source data/parsed/song_006.json
-```
-
-The built-in defaults are:
-
-```text
-LM Studio:     http://127.0.0.1:1234
-model:         qwen/qwen3.6-35b-a3b
-context:       65536
-reasoning:     off
-```
-
----
-
-# 6. Run the first real harvest
-
-Start with one source, not the whole corpus:
-
-```bash
-liber-harvest harvest exegate data/parsed/song_006.json
-```
-
-That is equivalent to the explicit command:
-
-```bash
-liber-harvest harvest exegate data/parsed/song_006.json \
-  --model qwen/qwen3.6-35b-a3b \
-  --lm-studio-url http://127.0.0.1:1234 \
-  --context-length 65536 \
-  --reasoning off \
-  --temperature 0.1 \
+liber-harvest harvest exegate \
+  data/parsed/song_001.json \
+  --provider openai \
+  --model gpt-5.6 \
+  --openai-reasoning low \
   --max-output-tokens 32768 \
   --timeout 600 \
   --out harvest
 ```
 
-The provider injects the frozen Exegate Harvest system contract automatically.
+Liber Harvest sends the frozen Exegate Harvest system instructions automatically. Nothing should be pasted manually into a Playground or chat UI.
+
+**Privacy boundary:** OpenAI provider mode sends the Exegate source to the hosted OpenAI API. The request uses `store: false`, but it is still remote inference. Use LM Studio if the corpus must remain entirely local.
+
+### LM Studio: optional local inference
+
+Use this only when you want local model inference:
+
+```bash
+liber-harvest doctor --provider lmstudio
+```
+
+Then:
+
+```bash
+liber-harvest harvest exegate \
+  data/parsed/song_001.json \
+  --provider lmstudio
+```
+
+Default LM Studio profile:
+
+```text
+endpoint:       http://127.0.0.1:1234
+model:          qwen/qwen3.6-35b-a3b
+context:        65536
+reasoning:      off
+temperature:    0.1
+output tokens:  32768
+timeout:        600 s
+```
+
+If LM Studio token authentication is enabled:
+
+```bash
+export LIBER_HARVEST_LM_STUDIO_TOKEN="..."
+```
+
+### Static: no live model call
+
+Static mode materializes a previously generated extraction response:
+
+```bash
+liber-harvest harvest exegate \
+  data/parsed/song_001.json \
+  --response-file extraction-response.json
+```
+
+`--response-file` automatically selects the static provider. Equivalent explicit form:
+
+```bash
+liber-harvest harvest exegate \
+  data/parsed/song_001.json \
+  --provider static \
+  --response-file extraction-response.json
+```
+
+Static mode is useful for regression testing, reproducibility, provider comparison, and manual review workflows. It cannot generate a new semantic extraction by itself.
 
 ---
 
-# 7. Environment variables
+## 5. No silent provider default
 
-Optional shell defaults:
+This command intentionally does **not** pick a backend:
 
 ```bash
+liber-harvest harvest exegate data/parsed/song_001.json
+```
+
+If no provider is configured, Liber Harvest tells you to choose one instead of attempting LM Studio.
+
+You may set a shell default:
+
+```bash
+export LIBER_HARVEST_PROVIDER=openai
+```
+
+or:
+
+```bash
+export LIBER_HARVEST_PROVIDER=lmstudio
+```
+
+Then the short command becomes valid:
+
+```bash
+liber-harvest harvest exegate data/parsed/song_001.json
+```
+
+Other provider-related environment variables:
+
+```bash
+export LIBER_HARVEST_MODEL=...
+export LIBER_HARVEST_OPENAI_BASE_URL=https://api.openai.com/v1
 export LIBER_HARVEST_LM_STUDIO_URL=http://127.0.0.1:1234
-export LIBER_HARVEST_MODEL=qwen/qwen3.6-35b-a3b
 ```
-
-If LM Studio authentication is enabled:
-
-```bash
-export LIBER_HARVEST_LM_STUDIO_TOKEN='...'
-```
-
-Command-line `--model` and `--lm-studio-url` override the corresponding defaults.
 
 ---
 
-# 8. Validate the result
+## 6. `doctor`
 
-Basic materialized-record validation:
-
-```bash
-liber-harvest validate harvest/library/fragments.jsonl
-```
-
-Full provenance validation reopens the historical source and verifies that the stored evidence still resolves correctly:
+Provider-neutral check:
 
 ```bash
-liber-harvest validate harvest/library/fragments.jsonl --provenance
+liber-harvest doctor --source data/parsed/song_001.json
 ```
 
-Do this before treating a harvest run as accepted output.
+This checks the runtime directories, output writeability, and source parsing. If no provider is selected it reports that provider-specific checks were skipped.
+
+OpenAI:
+
+```bash
+liber-harvest doctor --provider openai --source data/parsed/song_001.json
+```
+
+LM Studio:
+
+```bash
+liber-harvest doctor --provider lmstudio --source data/parsed/song_001.json
+```
+
+Static:
+
+```bash
+liber-harvest doctor \
+  --provider static \
+  --response-file extraction-response.json \
+  --source data/parsed/song_001.json
+```
 
 ---
 
-# 9. Batch harvest
+## 7. Batch harvest with `--all`
 
-After several single-source runs are satisfactory:
+`--all` belongs to the nested **`harvest exegate`** command. To see it:
+
+```bash
+liber-harvest harvest exegate --help
+```
+
+It discovers `song_*.json` directly under the selected source root.
+
+OpenAI batch:
 
 ```bash
 liber-harvest harvest exegate \
   --all \
   --source-root data/parsed \
+  --provider openai \
   --out harvest
 ```
 
-Current `--all` behavior is intentionally simple: it discovers `song_*.json` files directly under the selected source root. Bundle-directory recursion is not part of v0.1.4.
+LM Studio batch:
+
+```bash
+liber-harvest harvest exegate \
+  --all \
+  --source-root data/parsed \
+  --provider lmstudio \
+  --out harvest
+```
+
+Static `--response-file` is intentionally single-source only.
 
 ---
 
-# 10. Output structure
+## 8. Validate output
+
+Basic record validation:
+
+```bash
+liber-harvest validate harvest/library/fragments.jsonl
+```
+
+Full provenance validation reopens the original source:
+
+```bash
+liber-harvest validate \
+  harvest/library/fragments.jsonl \
+  --provenance
+```
+
+Do this before treating a harvest as accepted output.
+
+---
+
+## 9. Output structure
 
 ```text
 harvest/
@@ -381,102 +391,58 @@ harvest/
     └── relations.jsonl
 ```
 
-The database/vector layer is deliberately downstream. JSON/JSONL and manifests are Harvest truth.
+Files are Harvest truth. Databases, vector indexes, search systems and LV-Forge imports are downstream projections.
 
 ---
 
-# 11. Offline/static-provider mode
+## 10. Common failures
 
-You can materialize a previously generated extraction response without contacting LM Studio:
+### `No extraction provider selected`
+
+List modes:
 
 ```bash
-liber-harvest harvest exegate data/parsed/song_006.json \
-  --response-file extraction-response.json \
-  --out harvest
+liber-harvest providers
 ```
 
-This is useful for regression testing, reproducibility, and comparing model outputs.
+Then select `--provider openai`, `--provider lmstudio`, or supply `--response-file`.
+
+### OpenAI key missing
+
+```bash
+export OPENAI_API_KEY="..."
+liber-harvest doctor --provider openai
+```
+
+### LM Studio connection refused
+
+LM Studio is optional. Either start its server and check:
+
+```bash
+liber-harvest doctor --provider lmstudio
+```
+
+or use OpenAI instead:
+
+```bash
+liber-harvest harvest exegate \
+  data/parsed/song_001.json \
+  --provider openai
+```
+
+### Invalid model response
+
+Liber Harvest performs syntax repair and one contract-repair cycle. If the response still violates the frozen contract, the run is rejected rather than writing malformed Lore Fragments.
 
 ---
 
-# 12. Troubleshooting
+## 11. Frozen design boundary
 
-## `LM Studio check failed`
-
-Check:
-
-```bash
-lms server status
-curl http://127.0.0.1:1234/api/v1/models
-```
-
-Then run:
-
-```bash
-liber-harvest doctor
-```
-
-## `model not installed/visible`
-
-```bash
-lms get qwen/qwen3.6-35b-a3b
-lms ls --llm
-```
-
-Or override the model:
-
-```bash
-liber-harvest doctor --model <your-model-key>
-```
-
-## Model is installed but not loaded
-
-```bash
-lms load qwen/qwen3.6-35b-a3b --context-length 65536
-```
-
-LM Studio may also auto-load an installed model on first API use, but explicit loading makes memory/context configuration easier to audit.
-
-## Out of memory
-
-Try, in order:
-
-1. reduce `--context-length` to `32768`;
-2. use a more compressed quantization;
-3. reduce GPU offload;
-4. use a smaller model for exploratory runs.
-
-Keep the Liber Harvest `--context-length` at or below the context with which the model is loaded.
-
-## Model emits invalid JSON
-
-Liber Harvest automatically performs one syntax-repair attempt and contract repair. If the result still fails, the run is rejected rather than silently writing malformed fragments.
-
-## Debug the exact prompt sent to LM Studio
-
-LM Studio can stream inference logs:
-
-```bash
-lms log stream
-```
-
-Remember that the Harvest system instructions come from:
-
-```text
-src/liber_harvest/adapters/exegate/contract.py
-```
-
-Do not maintain a second manual copy inside LM Studio.
-
----
-
-# 13. Frozen design documents
-
-The standalone architecture and source-tree baseline remain governed by:
+The following remain authoritative and unchanged by v0.1.5:
 
 - `ARCHITECTURE-FREEZE-v0.1.2.md`
 - `FOLDER-STRUCTURE-FREEZE-v0.1.2.md`
 - `contracts/exegate-harvest/v0.1.2/`
 - `schemas/v0.1.2/`
 
-Application v0.1.4 improves operation and provider control while preserving that frozen semantic and architectural boundary.
+The OpenAI provider is an implementation file inside the already frozen `providers/` subsystem. It does not alter the semantic contract or deterministic ownership boundary.

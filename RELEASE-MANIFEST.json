@@ -1,21 +1,28 @@
 {
-  "product": "Liber Harvest",
-  "version": "0.1.4",
-  "status": "STANDALONE / OPERATOR-READY / BUGFIX / AUDITED",
-  "architecture_contract": "ARCHITECTURE-FREEZE-v0.1.2.md",
-  "structure_contract": "FOLDER-STRUCTURE-FREEZE-v0.1.2.md",
-  "semantic_contract": "exegate-harvest/0.1.2",
-  "frozen_clauses": "LF-01 through LF-16",
-  "release_scope": "CLI compatibility bugfix: replace typing.Literal reasoning option with Typer/Click-compatible StrEnum; no semantic-contract change.",
-  "tests": {
-    "pytest_passed": 27,
-    "failures": 0
+  "application": "Liber Harvest",
+  "application_version": "0.1.5",
+  "release_kind": "provider-and-operator release",
+  "frozen_contract_version": "exegate-harvest/0.1.2",
+  "fragment_schema_version": "lore-fragment/0.1.2",
+  "architecture_freeze": "v0.1.2",
+  "folder_structure_freeze": "v0.1.2",
+  "semantic_contract_changed": false,
+  "provider_policy": {
+    "implicit_live_provider": false,
+    "providers": ["openai", "lmstudio", "static"],
+    "openai_default_model": "gpt-5.6",
+    "lmstudio_default_model": "qwen/qwen3.6-35b-a3b"
   },
-  "declared_typer_range": "typer>=0.16,<0.17",
-  "regression": "full Typer command tree and harvest exegate --help construction tested",
-  "wheel": "liber_harvest-0.1.4-py3-none-any.whl",
-  "wheel_sha256": "ce101a3126635faf2b130b39afb8753afa5b92c81ecef1cb9b8975e985357191",
-  "runtime_dependency_on_lv_forge": false,
-  "sha256_manifest": "SHA256SUMS.txt",
-  "tracked_payload_files": 91
+  "verification": {
+    "pytest": "36 passed",
+    "compileall": "pass",
+    "wheel": "liber_harvest-0.1.5-py3-none-any.whl",
+    "wheel_sha256": "bccfe240daaad6d1d77d668e1dea6df886686d5e2ac1b8af7750f0a34863433d"
+  },
+  "notes": [
+    "LM Studio is optional in v0.1.5.",
+    "A bare live harvest no longer selects or contacts a provider implicitly.",
+    "--response-file continues to provide deterministic offline/static materialization.",
+    "The OpenAI provider uses the hosted Responses API and therefore sends source content off-device."
+  ]
 }
