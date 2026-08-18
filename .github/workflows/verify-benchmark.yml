@@ -2,6 +2,7 @@ name: verify-benchmark-v0.1.6
 
 on:
   push:
+  pull_request:
 
 permissions:
   contents: read
