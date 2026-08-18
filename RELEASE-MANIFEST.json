@@ -1,12 +1,20 @@
 {
   "application": "Liber Harvest",
-  "application_version": "0.1.5",
-  "release_kind": "provider-and-operator release",
+  "application_version": "0.1.6",
+  "release_kind": "model-selection benchmark release",
   "frozen_contract_version": "exegate-harvest/0.1.2",
   "fragment_schema_version": "lore-fragment/0.1.2",
   "architecture_freeze": "v0.1.2",
   "folder_structure_freeze": "v0.1.2",
   "semantic_contract_changed": false,
+  "benchmark": {
+    "version": "model-selection/0.1",
+    "cases": ["T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08", "T09", "T10", "T11"],
+    "executables": ["liber-harvest-benchmark", "lh-benchmark"],
+    "generated_output": "benchmark-results/",
+    "automatic_score_is_shortlist_only": true,
+    "manual_semantic_review_required": true
+  },
   "provider_policy": {
     "implicit_live_provider": false,
     "providers": ["openai", "lmstudio", "static"],
@@ -14,15 +22,16 @@
     "lmstudio_default_model": "qwen/qwen3.6-35b-a3b"
   },
   "verification": {
-    "pytest": "36 passed",
-    "compileall": "pass",
-    "wheel": "liber_harvest-0.1.5-py3-none-any.whl",
-    "wheel_sha256": "bccfe240daaad6d1d77d668e1dea6df886686d5e2ac1b8af7750f0a34863433d"
+    "previous_full_suite": "v0.1.5: 36 passed",
+    "v0.1.6_changed_python_syntax": "checked before publication",
+    "v0.1.6_full_pytest": "not executed in publication runtime; direct GitHub clone blocked by DNS",
+    "integrity_manifest": "SHA256SUMS.txt"
   },
   "notes": [
-    "LM Studio is optional in v0.1.5.",
-    "A bare live harvest no longer selects or contacts a provider implicitly.",
-    "--response-file continues to provide deterministic offline/static materialization.",
-    "The OpenAI provider uses the hosted Responses API and therefore sends source content off-device."
+    "T01-T11 case definitions remain unchanged and retain their v0.1.2 calibration role.",
+    "The benchmark overlays deterministic scoring, target checks, repair counts and timing on the frozen cases.",
+    "Raw fragment count is intentionally not rewarded by the automatic score.",
+    "Quantization/context configuration should be encoded in each benchmark run label.",
+    "The benchmark does not alter LF-01 through LF-16 or any v0.1.2 schema."
   ]
 }
