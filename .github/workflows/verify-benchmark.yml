@@ -1,0 +1,49 @@
+name: verify-benchmark-v0.1.6
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+          pip install build
+      - name: Test
+        run: pytest -q
+      - name: Compile
+        run: python -m compileall -q src
+      - name: CLI smoke
+        run: |
+          liber-harvest version
+          liber-harvest-benchmark --help
+          lh-benchmark cases
+          lh-benchmark profile
+      - name: Build wheel
+        run: python -m build --wheel
+      - name: Checksums
+        run: |
+          sha256sum \
+            .gitignore \
+            README.md \
+            calibration/README.md \
+            calibration/MODEL-SELECTION-BENCHMARK-v0.1.md \
+            calibration/model-selection-profile-v0.1.json \
+            pyproject.toml \
+            src/liber_harvest/__init__.py \
+            src/liber_harvest/constants.py \
+            src/liber_harvest/benchmark.py \
+            src/liber_harvest/benchmark_cli.py \
+            tests/unit/test_benchmark.py \
+            RELEASE-MANIFEST.json
+          sha256sum dist/liber_harvest-0.1.6-py3-none-any.whl
