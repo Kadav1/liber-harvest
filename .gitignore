@@ -10,6 +10,7 @@ build/
 *.egg-info/
 .env
 harvest/
+benchmark-results/
 calibration/**/actual/
 # Local historical source corpus (runtime input, not repository content)
 data/

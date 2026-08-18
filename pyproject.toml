@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "liber-harvest"
-version = "0.1.5"
+version = "0.1.6"
 description = "Provenance-preserving historical lore recovery for Liber Vacuitatis"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -26,6 +26,8 @@ dev = [
 [project.scripts]
 liber-harvest = "liber_harvest.cli:app"
 lh = "liber_harvest.cli:app"
+liber-harvest-benchmark = "liber_harvest.benchmark_cli:app"
+lh-benchmark = "liber_harvest.benchmark_cli:app"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
