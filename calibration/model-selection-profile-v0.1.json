@@ -1,0 +1,45 @@
+{
+  "benchmark_version": "model-selection/0.1",
+  "contract_version": "exegate-harvest/0.1.2",
+  "cases": [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05",
+    "T06",
+    "T07",
+    "T08",
+    "T09",
+    "T10",
+    "T11"
+  ],
+  "compliance_weights": {
+    "contract": 25.0,
+    "coverage": 20.0,
+    "provenance": 15.0,
+    "modality_evidence": 15.0,
+    "legacy_isolation": 10.0,
+    "dedupe": 5.0,
+    "review_burden": 5.0,
+    "wrapper_isolation": 5.0
+  },
+  "selection_formula": {
+    "mean_compliance_weight": 0.8,
+    "target_pass_percentage_weight": 0.2
+  },
+  "ranking_policy": [
+    "prefer runs completing every requested case",
+    "then higher selection_score",
+    "then higher mean_compliance_score",
+    "then higher target_pass_pct",
+    "then fewer repair calls",
+    "then lower semantic inference time"
+  ],
+  "manual_review_required": true,
+  "notes": [
+    "Automatic scoring must not reward raw fragment count.",
+    "Informational semantic targets are not included in automatic target pass percentage.",
+    "Quantization and context configuration should be recorded in the benchmark label."
+  ]
+}
