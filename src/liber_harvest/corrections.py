@@ -4,6 +4,7 @@ These corrections are deliberately narrow. They repair structural facts that Lib
 Harvest can prove from the source document without asking a model to reinterpret
 lore. They do not make canon decisions or invent missing semantics.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -303,6 +304,19 @@ def fragment_error_indices(exc: ValidationError) -> tuple[int, ...]:
     return tuple(sorted(indices))
 
 
+def all_validation_errors_fragment_local(exc: ValidationError) -> bool:
+    """Return True only when every schema error belongs to one fragment item."""
+    errors = exc.errors()
+    if not errors:
+        return False
+    return all(
+        len(error.get("loc", ())) >= 2
+        and error["loc"][0] == "fragments"
+        and isinstance(error["loc"][1], int)
+        for error in errors
+    )
+
+
 def make_fragment_repair_subset(
     candidate: dict[str, Any], indices: tuple[int, ...]
 ) -> dict[str, Any] | None:
@@ -336,6 +350,21 @@ def make_fragment_repair_subset(
     }
 
 
+def _remap_coverage_key(candidate: dict[str, Any], old_key: str, new_key: str) -> None:
+    if old_key == new_key:
+        return
+    coverage = candidate.get("coverage")
+    if not isinstance(coverage, list):
+        return
+    for entry in coverage:
+        if not isinstance(entry, dict):
+            continue
+        keys = entry.get("concept_keys")
+        if not isinstance(keys, list):
+            continue
+        entry["concept_keys"] = [new_key if key == old_key else key for key in keys]
+
+
 def merge_fragment_repair(
     candidate: dict[str, Any], indices: tuple[int, ...], repaired_subset: dict[str, Any]
 ) -> dict[str, Any]:
@@ -343,7 +372,7 @@ def merge_fragment_repair(
     fragments = merged.get("fragments")
     repaired = repaired_subset.get("fragments")
     if not isinstance(fragments, list) or not isinstance(repaired, list):
-        raise ValueError("Fragment repair response must contain a fragments list")
+        raise TypeError("Fragment repair response must contain a fragments list")
     if len(repaired) != len(indices):
         raise ValueError(
             f"Fragment repair returned {len(repaired)} fragments for {len(indices)} requested fragments"
@@ -351,9 +380,9 @@ def merge_fragment_repair(
     for target_index, repaired_fragment in zip(indices, repaired, strict=True):
         original = fragments[target_index]
         if isinstance(original, dict) and isinstance(repaired_fragment, dict):
-            original_key = original.get("concept_key")
-            if isinstance(original_key, str):
-                repaired_fragment = deepcopy(repaired_fragment)
-                repaired_fragment["concept_key"] = original_key
-        fragments[target_index] = repaired_fragment
+            old_key = original.get("concept_key")
+            new_key = repaired_fragment.get("concept_key")
+            if isinstance(old_key, str) and isinstance(new_key, str):
+                _remap_coverage_key(merged, old_key, new_key)
+        fragments[target_index] = deepcopy(repaired_fragment)
     return merged
