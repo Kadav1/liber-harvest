@@ -46,3 +46,10 @@ jobs:
         run: |
           python -m build --wheel
           sha256sum dist/liber_harvest-0.1.7-py3-none-any.whl
+      - name: Final release source checksums
+        run: |
+          git ls-files \
+            | grep -v '^SHA256SUMS.txt$' \
+            | grep -v '^\.github/workflows/verify-v0.1.7.yml$' \
+            | sort \
+            | xargs sha256sum
