@@ -91,7 +91,7 @@ class OpenAIProvider:
         response.raise_for_status()
         body = response.json()
         if not isinstance(body, dict):
-            raise ValueError("OpenAI model lookup returned an unexpected response")
+            raise TypeError("OpenAI model lookup returned an unexpected response")
         return body
 
     def _request(self, *, input_text: str, system_prompt: str) -> str:
@@ -116,7 +116,7 @@ class OpenAIProvider:
                 response.raise_for_status()
                 body = response.json()
                 if not isinstance(body, dict):
-                    raise ValueError("OpenAI Responses API returned an unexpected response")
+                    raise TypeError("OpenAI Responses API returned an unexpected response")
                 return self._extract_output_text(body)
             except (httpx.TimeoutException, httpx.NetworkError) as exc:
                 last_exc = exc
