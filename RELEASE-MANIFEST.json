@@ -1,7 +1,7 @@
 {
   "application": "Liber Harvest",
-  "application_version": "0.1.6",
-  "release_kind": "model-selection benchmark release",
+  "application_version": "0.1.7",
+  "release_kind": "corrective execution and benchmark-integrity release",
   "frozen_contract_version": "exegate-harvest/0.1.2",
   "fragment_schema_version": "lore-fragment/0.1.2",
   "architecture_freeze": "v0.1.2",
@@ -12,31 +12,67 @@
     "cases": ["T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08", "T09", "T10", "T11"],
     "executables": ["liber-harvest-benchmark", "lh-benchmark"],
     "generated_output": "benchmark-results/",
+    "session_mode": "stateless",
+    "semantic_call_cap_per_case": 2,
+    "max_fragment_repairs_per_case": 1,
+    "full_result_repair": false,
+    "provider_internal_syntax_repair": false,
+    "source_preflight_before_inference": true,
+    "infrastructure_failures_are_model_zeroes": false,
+    "infrastructure_failures_make_run_unrankable": true,
     "automatic_score_is_shortlist_only": true,
     "manual_semantic_review_required": true
+  },
+  "deterministic_correction": {
+    "enabled": true,
+    "canonical_source_identity": true,
+    "source_backed_scalar_pointer_correction": true,
+    "empty_null_source_fragment_removal": true,
+    "coverage_remap_after_repaired_concept_key": true,
+    "semantic_invention": false,
+    "canon_decision": false
   },
   "provider_policy": {
     "implicit_live_provider": false,
     "providers": ["openai", "lmstudio", "static"],
     "openai_default_model": "gpt-5.6",
-    "lmstudio_default_model": "qwen/qwen3.6-35b-a3b"
+    "lmstudio_default_model": "qwen/qwen3.6-35b-a3b",
+    "lmstudio_http_error_body_preserved": true,
+    "lmstudio_structured_output_optional": true,
+    "lmstudio_structured_output_requires_exact_loaded_context_instance": true
   },
   "verification": {
-    "environment": "GitHub Actions ubuntu-24.04 / Python 3.12.13",
-    "workflow_run_id": 32104730256,
-    "pytest": "40 passed in 0.51s",
+    "environment": "GitHub Actions ubuntu-24.04 / Python 3.12.14",
+    "workflow_run_id": 32216958359,
+    "workflow_job_id": 95960167891,
+    "pytest": "51 passed in 0.74s",
+    "ruff_changed_files": "pass; B008 intentionally excluded for Typer Option/Argument signature pattern",
     "compileall": "pass",
     "benchmark_cli_smoke": "pass",
     "wheel_build": "pass",
-    "wheel": "liber_harvest-0.1.6-py3-none-any.whl",
-    "wheel_sha256": "a0e619c15219e15f134122494cb391fc7400df458eff87ad59c1f70b8d9b07ed",
-    "integrity_manifest": "SHA256SUMS.txt"
+    "wheel": "liber_harvest-0.1.7-py3-none-any.whl",
+    "wheel_sha256": "c74ae7c5127b3c4f48049c280988294c74f7db547763a5abae8ce07e8a2ad00c",
+    "integrity_manifest": "SHA256SUMS.txt",
+    "audit_report": "AUDIT-REPORT-v0.1.7.md"
+  },
+  "audit": {
+    "status": "PASS",
+    "report": "AUDIT-REPORT-v0.1.7.md",
+    "substantive_findings_fixed": [
+      "invalid repaired concept_key was being preserved instead of allowing schema repair",
+      "mixed root and fragment schema failures could spend the single fragment repair call",
+      "structured LM Studio benchmarking could target a generic model key instead of the exact loaded context instance"
+    ],
+    "known_non_blocking_maintenance": [
+      "setuptools warns that the existing project.license TOML-table form is deprecated for a future 2027 removal horizon"
+    ]
   },
   "notes": [
     "T01-T11 case definitions remain unchanged and retain their v0.1.2 calibration role.",
-    "The benchmark overlays deterministic scoring, target checks, repair counts and timing on the frozen cases.",
-    "Raw fragment count is intentionally not rewarded by the automatic score.",
-    "Quantization and context configuration should be encoded in each benchmark run label.",
-    "The benchmark does not alter LF-01 through LF-16 or any v0.1.2 schema."
+    "Benchmark version remains model-selection/0.1; v0.1.7 corrects the execution harness rather than the scoring contract.",
+    "Raw fragment count remains intentionally unrewarded by the automatic score.",
+    "Quantization, context and output configuration should be encoded in each benchmark run label.",
+    "The benchmark does not alter LF-01 through LF-16 or any v0.1.2 schema.",
+    "Temporary GitHub Actions verification workflow and pull request scaffolding are excluded from the final release tree."
   ]
 }

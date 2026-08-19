@@ -10,13 +10,13 @@ Liber Harvest does **not** depend on LV-Forge. LV-Forge, Obsidian tooling, or an
 
 ## Current release
 
-- Application: **0.1.6**
+- Application: **0.1.7**
 - Frozen semantic contract: **`exegate-harvest/0.1.2`**
 - Lore Fragment schema: **`lore-fragment/0.1.2`**
 - Frozen clauses: **LF-01 through LF-16**
 - Model-selection benchmark: **`model-selection/0.1`**
 
-Application v0.1.6 adds the T01-T11 model-selection benchmark. It does not revise the frozen v0.1.2 lore semantics.
+Application v0.1.7 is a corrective execution/benchmark release. It fixes request budgeting, bounded repair, deterministic correction, preflight and ranking integrity without revising the frozen v0.1.2 lore semantics or the T01-T11 case definitions.
 
 ---
 
@@ -37,18 +37,39 @@ Semantic extraction provider
    └── Static       saved response, no live inference
         │
         ▼
-Lore Fragment drafts
+Lore Fragment candidate
         │
         ▼
-Deterministic Liber Harvest core
-   ├── contract validation
-   ├── exact provenance resolution
-   ├── source spans + hashes
-   ├── deterministic LFR IDs
-   └── JSONL + manifests
+Deterministic correction
+   ├── canonical source identity
+   ├── source-backed scalar pointer correction
+   ├── empty/null source handling
+   ├── schema-shape normalization
+   └── safe evidence/modality normalization
+        │
+        ▼
+Schema validation
+        │
+        ├── valid ───────────────────────────┐
+        │                                    │
+        └── fragment-local schema failure    │
+                    │                        │
+                    ▼                        │
+          at most one fragment repair        │
+                    │                        │
+                    └────────────────────────┤
+                                             ▼
+                              Deterministic source validation
+                                             │
+                                             ▼
+                              provenance spans + hashes
+                              deterministic LFR IDs
+                              JSONL + manifests
 ```
 
-The model/provider is an **untrusted semantic extractor**. It does not control final IDs, source hashes, provenance spans, or manifests.
+The model/provider is an **untrusted semantic extractor**. It does not control final IDs, source hashes, provenance spans, manifests, or source-validation verdicts.
+
+v0.1.7 permits at most **two live semantic calls per source**: one extraction and, only when every schema error is fragment-local, one fragment-scoped repair. Deterministic validation failures are not sent back to the model.
 
 **No live provider is selected implicitly.** A bare harvest command will not try to contact LM Studio or OpenAI.
 
@@ -138,11 +159,13 @@ data/bundles/EXE-BUNDLE-V-N-01/
 └── exegate_run.json
 ```
 
+T02 specifically requires `EXE-BUNDLE-V-N-01`. It is a historical LV-Forge calibration fixture and is intentionally treated as external runtime corpus rather than application source. The benchmark preflight now detects its absence before any model inference begins.
+
 ---
 
 ## 4. Choose a provider
 
-### OpenAI: no LM Studio required
+### OpenAI: hosted inference
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
@@ -164,7 +187,7 @@ gpt-5.6
 
 The frozen Harvest system instructions are sent automatically. Nothing should be pasted manually into a chat UI.
 
-**Privacy boundary:** OpenAI provider mode sends the Exegate source to the hosted API. Use LM Studio when inference must remain local.
+**Privacy/cost boundary:** OpenAI provider mode sends the Exegate source to the hosted API and may incur API charges. Use a local provider when the corpus must remain local or hosted inference is not desired.
 
 ### LM Studio: optional local inference
 
@@ -177,7 +200,7 @@ liber-harvest harvest exegate \
   --model <lm-studio-model-key>
 ```
 
-The generic default profile is:
+The generic non-benchmark defaults remain:
 
 ```text
 endpoint:       http://127.0.0.1:1234
@@ -188,7 +211,9 @@ output tokens:  32768
 timeout:        600 s
 ```
 
-For constrained GPUs, lower `--context-length` explicitly. Model quantization and context length should be treated as part of the operational model profile.
+For constrained GPUs, lower `--context-length` and `--max-output-tokens` explicitly. Model quantization, context length and output budget should be treated as part of the operational model profile.
+
+LM Studio HTTP failures now preserve the server response body, so context-overflow, model-load and other server diagnostics are visible instead of being reduced to a generic `400 Bad Request`.
 
 If LM Studio token authentication is enabled:
 
@@ -294,7 +319,7 @@ liber-harvest validate \
 
 ## 9. T01-T11 model-selection benchmark
 
-Application v0.1.6 turns the frozen semantic calibration suite into a repeatable model-selection benchmark without changing the cases themselves.
+The frozen T01-T11 semantic calibration suite is also a repeatable model-selection benchmark. v0.1.7 retains benchmark version `model-selection/0.1` and the same case definitions, while correcting the execution harness around them.
 
 The benchmark covers:
 
@@ -324,20 +349,29 @@ Show the score profile:
 lh-benchmark profile
 ```
 
-### Run one model through all T01-T11
+### Benchmark preflight
 
-For LM Studio:
+Before T01 starts, v0.1.7 resolves and parses **every selected source**. If T02 or another source is missing, the run aborts before spending inference time.
+
+For LM Studio, preflight also checks that the model is visible and that the requested output budget is smaller than the context window.
+
+### Recommended 16K local profile
+
+For an 11 GB-class GPU, start conservatively:
 
 ```bash
 lh-benchmark run \
   --provider lmstudio \
   --model <lm-studio-model-key> \
-  --label qwen3.5-9b-q6k-16k \
+  --label qwen3.5-9b-q4km-16k \
   --context-length 16384 \
+  --max-output-tokens 4096 \
   --reasoning off \
   --corpus-root data \
   --hardware-note "11 GB VRAM; DDR3 system RAM"
 ```
+
+The benchmark CLI default output ceiling is now **8192**, but a smaller ceiling such as 4096 is recommended when the total context is only 16384. The CLI rejects any LM Studio configuration where `max_output_tokens >= context_length` and warns when the output ceiling consumes more than half of the context.
 
 `--label` should identify the exact model configuration being tested. Quantization matters. Do not label Q4 and Q6 runs identically.
 
@@ -347,8 +381,39 @@ Run only selected stress cases:
 lh-benchmark run \
   --provider lmstudio \
   --model <model-key> \
-  --cases T01,T03,T04,T07,T10
+  --cases T01,T03,T04,T07,T10 \
+  --context-length 16384 \
+  --max-output-tokens 4096
 ```
+
+### Optional LM Studio structured output
+
+v0.1.7 can use LM Studio's JSON-schema-constrained chat-completions path:
+
+```bash
+lh-benchmark run \
+  --provider lmstudio \
+  --model <model-key-or-loaded-instance> \
+  --context-length 16384 \
+  --max-output-tokens 4096 \
+  --lm-studio-structured-output
+```
+
+For reproducibility, structured mode requires a model instance already loaded at the requested context length. Preflight resolves and binds that exact loaded instance before inference. Native LM Studio mode remains the default because it can set context length directly on each request.
+
+### Repair budget
+
+Each case is explicitly stateless and has a hard semantic-call ceiling:
+
+```text
+1 extraction
++
+at most 1 fragment-scoped repair
+=
+at most 2 live model calls per case
+```
+
+The previous full-result repair path is gone. Deterministic source-validation failures are reported directly instead of resending the entire source and candidate to the model.
 
 ### Compare models
 
@@ -381,6 +446,8 @@ The aggregate selection score uses:
 +
 20% machine-scoreable target-check pass percentage
 ```
+
+Infrastructure failures and missing sources no longer become misleading zero model scores. They make the run **unrankable** (`ranking_eligible: false`, `selection_score: null`) until the infrastructure problem is corrected and the benchmark is rerun.
 
 **The score is a shortlist, not a semantic oracle.** Targets that cannot be judged safely without gold semantic annotations are marked informational. Final selection should inspect the top models' actual T01-T11 fragments, especially T01, T03, T04, T07, and T10.
 
@@ -416,6 +483,8 @@ benchmark-results/
     └── summary.json
 ```
 
+Every v0.1.7 benchmark result records `session_mode: "stateless"`. Summaries also record the two-call semantic ceiling and provider preflight metadata.
+
 ---
 
 ## 11. Common failures
@@ -436,6 +505,18 @@ LM Studio is optional. Start/check its server and run:
 liber-harvest doctor --provider lmstudio
 ```
 
+### LM Studio context overflow
+
+A v0.1.7 LM Studio HTTP error includes the server's diagnostic body. For example, if a request exceeds a 16K context, reduce `--max-output-tokens`, increase the loaded/requested context if hardware permits, or use a smaller source profile.
+
+For the 16K benchmark profile, start with:
+
+```text
+context_length:     16384
+max_output_tokens:   4096
+reasoning:             off
+```
+
 ### A benchmark case cannot find its source
 
 The benchmark resolves the historical calibration keys against the runtime corpus convention:
@@ -445,21 +526,29 @@ data/parsed/song_*.json
 data/bundles/EXE-BUNDLE-*/exegate_run.json
 ```
 
-Use `--corpus-root` if your runtime corpus is elsewhere.
+T02 requires:
+
+```text
+data/bundles/EXE-BUNDLE-V-N-01/exegate_run.json
+```
+
+Use `--corpus-root` if your runtime corpus is elsewhere. v0.1.7 detects missing selected sources during preflight before T01 begins.
 
 ### Invalid model response
 
-Liber Harvest performs syntax repair and the configured contract-repair cycle. If the response still violates the frozen contract, that benchmark case fails and receives compliance score `0`.
+v0.1.7 first applies only deterministic structural corrections that can be established from the source/contract. It then validates the result. If every remaining schema error is local to one or more fragments, Harvest may make **one** fragment-scoped repair call. It does not perform provider-internal syntax repair or full-result repair loops.
+
+If the result still violates the frozen contract, the case is recorded as `contract_failed`. A malformed model response that cannot be parsed is recorded as `model_failed`. These are model/scorable failures; infrastructure failures are classified separately and invalidate ranking instead of assigning a false zero model score.
 
 ---
 
 ## 12. Frozen design boundary
 
-The following remain authoritative and unchanged by v0.1.6:
+The following remain authoritative and unchanged by v0.1.7:
 
 - `ARCHITECTURE-FREEZE-v0.1.2.md`
 - `FOLDER-STRUCTURE-FREEZE-v0.1.2.md`
 - `contracts/exegate-harvest/v0.1.2/`
 - `schemas/v0.1.2/`
 
-The model-selection benchmark is an application-level calibration overlay. It does not alter the semantic contract or deterministic ownership boundary.
+The model-selection benchmark and v0.1.7 corrective runtime are application-level layers. They do not alter LF-01 through LF-16, the semantic contract, or deterministic ownership of final provenance/identity.

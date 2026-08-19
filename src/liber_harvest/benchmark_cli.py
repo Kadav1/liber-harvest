@@ -1,25 +1,21 @@
 """CLI for running and comparing Liber Harvest model-selection benchmarks."""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from .benchmark import (
-    BENCHMARK_VERSION,
-    SCORE_WEIGHTS,
+from .benchmark import BENCHMARK_VERSION, SCORE_WEIGHTS, discover_cases
+from .benchmark_runtime import (
+    BenchmarkPreflightError,
     compare_summaries,
-    discover_cases,
     run_model_benchmark,
 )
 from .cli import (
     DEFAULT_CONTEXT_LENGTH,
-    DEFAULT_LM_STUDIO_URL,
-    DEFAULT_OPENAI_REASONING,
-    DEFAULT_OPENAI_URL,
     DEFAULT_REASONING,
     ProviderMode,
     _provider,
@@ -68,6 +64,9 @@ def show_profile():
         "Automatic selection score: 80% mean compliance + 20% target-check pass percentage."
     )
     console.print(
+        "Infrastructure/source failures invalidate ranking instead of scoring the model as zero."
+    )
+    console.print(
         "Informational semantic targets require human review before final model selection."
     )
 
@@ -75,27 +74,50 @@ def show_profile():
 @app.command("run")
 def run_benchmark(
     provider: ProviderMode = typer.Option(..., "--provider", help="openai or lmstudio."),
-    model: Optional[str] = typer.Option(None, "--model", help="Provider model key."),
-    label: Optional[str] = typer.Option(None, "--label", help="Human-readable model/config label."),
-    cases: Optional[str] = typer.Option(None, "--cases", help="Comma-separated case IDs; default T01-T11."),
+    model: str | None = typer.Option(None, "--model", help="Provider model key."),
+    label: str | None = typer.Option(None, "--label", help="Human-readable model/config label."),
+    cases: str | None = typer.Option(None, "--cases", help="Comma-separated case IDs; default T01-T11."),
     corpus_root: Path = typer.Option(Path("data"), "--corpus-root"),
     calibration_root: Path = typer.Option(Path("calibration"), "--calibration-root"),
     out: Path = typer.Option(Path("benchmark-results"), "--out"),
-    lm_studio_url: Optional[str] = typer.Option(None, "--lm-studio-url"),
-    openai_base_url: Optional[str] = typer.Option(None, "--openai-base-url"),
+    lm_studio_url: str | None = typer.Option(None, "--lm-studio-url"),
+    openai_base_url: str | None = typer.Option(None, "--openai-base-url"),
     temperature: float = typer.Option(0.1, "--temperature", min=0.0, max=1.0),
-    max_output_tokens: int = typer.Option(32768, "--max-output-tokens", min=1024),
+    max_output_tokens: int = typer.Option(8192, "--max-output-tokens", min=1024),
     context_length: int = typer.Option(DEFAULT_CONTEXT_LENGTH, "--context-length", min=4096),
     reasoning: ReasoningMode = typer.Option(DEFAULT_REASONING, "--reasoning"),
-    openai_reasoning: OpenAIReasoning = typer.Option(DEFAULT_OPENAI_REASONING, "--openai-reasoning"),
+    openai_reasoning: OpenAIReasoning = typer.Option(OpenAIReasoning.LOW, "--openai-reasoning"),
+    lm_studio_structured_output: bool = typer.Option(
+        False,
+        "--lm-studio-structured-output",
+        help=(
+            "Use LM Studio /v1/chat/completions JSON-schema output. The model must already be "
+            "loaded at --context-length because that endpoint cannot set context per request."
+        ),
+    ),
     timeout: float = typer.Option(600.0, "--timeout", min=1.0),
-    max_repairs: int = typer.Option(1, "--max-repairs", min=0, max=3),
-    hardware_note: Optional[str] = typer.Option(None, "--hardware-note"),
+    max_repairs: int = typer.Option(1, "--max-repairs", min=0, max=1),
+    hardware_note: str | None = typer.Option(None, "--hardware-note"),
 ):
     """Run selected T01-T11 cases against one live model/provider."""
     if provider == ProviderMode.STATIC:
         raise typer.BadParameter(
             "Model-selection runs require a live model provider; choose openai or lmstudio."
+        )
+    if provider == ProviderMode.LMSTUDIO:
+        if max_output_tokens >= context_length:
+            raise typer.BadParameter(
+                "--max-output-tokens must be smaller than --context-length for LM Studio "
+                f"({max_output_tokens} >= {context_length})"
+            )
+        if max_output_tokens > context_length / 2:
+            console.print(
+                "Warning: --max-output-tokens exceeds half of --context-length; large source prompts "
+                "may leave too little room for generation or repair."
+            )
+    elif lm_studio_structured_output:
+        raise typer.BadParameter(
+            "--lm-studio-structured-output may only be used with --provider lmstudio"
         )
 
     mode, extraction_provider = _provider(
@@ -111,6 +133,9 @@ def run_benchmark(
         openai_reasoning=openai_reasoning,
         timeout=timeout,
     )
+    if mode == ProviderMode.LMSTUDIO:
+        extraction_provider.structured_output = lm_studio_structured_output
+
     selected_cases = (
         [part.strip() for part in cases.split(",") if part.strip()]
         if cases
@@ -126,6 +151,9 @@ def run_benchmark(
         "temperature": temperature if mode == ProviderMode.LMSTUDIO else None,
         "context_length": context_length if mode == ProviderMode.LMSTUDIO else None,
         "reasoning": str(reasoning) if mode == ProviderMode.LMSTUDIO else None,
+        "structured_output": (
+            lm_studio_structured_output if mode == ProviderMode.LMSTUDIO else None
+        ),
         "openai_reasoning": (
             str(openai_reasoning) if mode == ProviderMode.OPENAI else None
         ),
@@ -133,29 +161,33 @@ def run_benchmark(
         "timeout": timeout,
         "max_repairs": max_repairs,
         "lm_studio_url": (
-            lm_studio_url or DEFAULT_LM_STUDIO_URL
+            getattr(extraction_provider, "base_url", None)
             if mode == ProviderMode.LMSTUDIO
             else None
         ),
         "openai_base_url": (
-            openai_base_url or DEFAULT_OPENAI_URL
+            getattr(extraction_provider, "base_url", None)
             if mode == ProviderMode.OPENAI
             else None
         ),
         "hardware_note": hardware_note,
     }
 
-    summary, summary_path = run_model_benchmark(
-        provider=extraction_provider,
-        provider_name=mode.value,
-        model_label=model_label,
-        corpus_root=corpus_root,
-        calibration_root=calibration_root,
-        case_ids=selected_cases,
-        out_root=out,
-        max_repairs=max_repairs,
-        configuration=configuration,
-    )
+    try:
+        summary, summary_path = run_model_benchmark(
+            provider=extraction_provider,
+            provider_name=mode.value,
+            model_label=model_label,
+            corpus_root=corpus_root,
+            calibration_root=calibration_root,
+            case_ids=selected_cases,
+            out_root=out,
+            max_repairs=max_repairs,
+            configuration=configuration,
+        )
+    except BenchmarkPreflightError as exc:
+        console.print(str(exc))
+        raise typer.Exit(2) from exc
 
     table = Table(title=f"Liber Harvest model benchmark: {model_label}")
     table.add_column("Metric")
@@ -164,7 +196,14 @@ def run_benchmark(
         "Cases completed",
         f"{summary['cases_completed']}/{summary['cases_requested']}",
     )
-    table.add_row("Selection score", f"{summary['selection_score']:.3f}")
+    selection = summary.get("selection_score")
+    table.add_row(
+        "Selection score",
+        f"{selection:.3f}" if selection is not None else "UNRANKABLE",
+    )
+    table.add_row(
+        "Ranking eligible", "yes" if summary.get("ranking_eligible") else "no"
+    )
     table.add_row(
         "Mean compliance", f"{summary['mean_compliance_score']:.3f}"
     )
@@ -193,6 +232,7 @@ def compare(
     table.add_column("#")
     table.add_column("Model")
     table.add_column("Provider")
+    table.add_column("Eligible")
     table.add_column("Selection")
     table.add_column("Compliance")
     table.add_column("Targets")
@@ -200,11 +240,13 @@ def compare(
     table.add_column("Repairs")
     table.add_column("Semantic s")
     for index, row in enumerate(rows, 1):
+        selection = row["selection_score"]
         table.add_row(
             str(index),
             str(row["model"]),
             str(row["provider"]),
-            f"{row['selection_score']:.3f}",
+            "yes" if row["ranking_eligible"] else "no",
+            f"{selection:.3f}" if selection is not None else "—",
             f"{row['mean_compliance_score']:.3f}",
             f"{row['target_pass_pct']:.3f}%",
             f"{row['cases_completed']}/{row['cases_requested']}",
@@ -213,7 +255,8 @@ def compare(
         )
     console.print(table)
     console.print(
-        "Leaderboard scores shortlist models. Inspect informational semantic targets before final selection."
+        "Only ranking-eligible runs should be used for model selection. Inspect informational "
+        "semantic targets before final selection."
     )
 
 
