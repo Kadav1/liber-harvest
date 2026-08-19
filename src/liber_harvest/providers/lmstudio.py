@@ -1,4 +1,5 @@
 """LM Studio provider for local semantic extraction."""
+
 from __future__ import annotations
 
 import json
@@ -37,10 +38,7 @@ class LMStudioHTTPError(ValueError):
 
 
 def normalize_lmstudio_base(url: str) -> str:
-    base = url.rstrip("/")
-    if base.endswith("/v1"):
-        base = base[:-3]
-    return base.rstrip("/")
+    return url.rstrip("/").removesuffix("/v1").rstrip("/")
 
 
 class LMStudioProvider:
@@ -77,6 +75,7 @@ class LMStudioProvider:
         self.http_retries = max(0, http_retries)
         self.api_token = api_token
         self.structured_output = structured_output
+        self._structured_model_instance_id: str | None = None
 
     def _headers(self) -> dict[str, str]:
         headers = {"Content-Type": "application/json"}
@@ -101,7 +100,7 @@ class LMStudioProvider:
         self._raise_for_status(response)
         body = response.json()
         if not isinstance(body, dict) or not isinstance(body.get("models"), list):
-            raise ValueError("LM Studio /api/v1/models returned an unexpected response")
+            raise TypeError("LM Studio /api/v1/models returned an unexpected response")
         return body
 
     def model_status(self) -> dict[str, Any] | None:
@@ -117,6 +116,14 @@ class LMStudioProvider:
                 return item
         return None
 
+    @staticmethod
+    def _instance_context(instance: dict[str, Any]) -> int | None:
+        config = instance.get("config") or instance.get("load_config") or {}
+        if not isinstance(config, dict):
+            return None
+        value = config.get("context_length")
+        return int(value) if isinstance(value, int) else None
+
     def benchmark_preflight(self) -> dict[str, Any]:
         if self.max_output_tokens >= self.context_length:
             raise ValueError(
@@ -128,25 +135,41 @@ class LMStudioProvider:
             raise ValueError(f"LM Studio model {self.model!r} is not installed/visible")
 
         loaded_contexts: list[int] = []
+        matching_instance_id: str | None = None
         for instance in status.get("loaded_instances") or []:
             if not isinstance(instance, dict):
                 continue
-            config = instance.get("config") or instance.get("load_config") or {}
-            if isinstance(config, dict) and isinstance(config.get("context_length"), int):
-                loaded_contexts.append(int(config["context_length"]))
+            context = self._instance_context(instance)
+            if context is not None:
+                loaded_contexts.append(context)
+            instance_id = instance.get("id")
+            if (
+                self.structured_output
+                and context == self.context_length
+                and isinstance(instance_id, str)
+                and instance_id
+                and matching_instance_id is None
+            ):
+                matching_instance_id = instance_id
 
-        if self.structured_output and self.context_length not in loaded_contexts:
-            raise ValueError(
-                "LM Studio structured-output benchmarking uses /v1/chat/completions, "
-                "which cannot set context_length per request. Pre-load the model at "
-                f"context_length={self.context_length} first; loaded contexts: "
-                f"{loaded_contexts or 'none'}"
-            )
+        if self.structured_output:
+            if matching_instance_id is None:
+                raise ValueError(
+                    "LM Studio structured-output benchmarking uses /v1/chat/completions, "
+                    "which cannot set context_length per request. Pre-load one model instance at "
+                    f"context_length={self.context_length}; loaded contexts: "
+                    f"{loaded_contexts or 'none'}"
+                )
+            self._structured_model_instance_id = matching_instance_id
+        else:
+            self._structured_model_instance_id = None
+
         return {
             "model": self.model,
             "structured_output": self.structured_output,
             "context_length": self.context_length,
             "loaded_contexts": loaded_contexts,
+            "structured_model_instance_id": self._structured_model_instance_id,
         }
 
     def _post_with_retries(self, url: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -163,7 +186,7 @@ class LMStudioProvider:
                 self._raise_for_status(response)
                 body = response.json()
                 if not isinstance(body, dict):
-                    raise ValueError("LM Studio returned an unexpected non-object response")
+                    raise TypeError("LM Studio returned an unexpected non-object response")
                 return body
             except (httpx.TimeoutException, httpx.NetworkError) as exc:
                 last_exc = exc
@@ -202,9 +225,14 @@ class LMStudioProvider:
         raise ValueError("LM Studio response did not contain a message output")
 
     def _request_structured(self, *, input_text: str, system_prompt: str) -> str:
+        if self._structured_model_instance_id is None:
+            raise ValueError(
+                "Structured LM Studio requests require benchmark_preflight() to bind an exact "
+                "loaded model instance"
+            )
         schema = ExegateHarvestResult.model_json_schema()
         payload = {
-            "model": self.model,
+            "model": self._structured_model_instance_id,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": input_text},
@@ -241,8 +269,6 @@ class LMStudioProvider:
         return self._request_native(input_text=input_text, system_prompt=system_prompt)
 
     def extract(self, envelope: HarvestInputEnvelope) -> dict[str, Any]:
-        # v0.1.7 deliberately performs one live extraction call. JSON repair, when
-        # needed, is owned by the single fragment-scoped repair budget in pipeline.py.
         text = self._request(
             input_text=json.dumps(envelope.model_dump(mode="json"), ensure_ascii=False),
             system_prompt=EXEGATE_HARVEST_SYSTEM_PROMPT,
