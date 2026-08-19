@@ -13,11 +13,14 @@ from liber_harvest.benchmark_runtime import (
     run_model_benchmark,
 )
 from liber_harvest.corrections import (
+    all_validation_errors_fragment_local,
     apply_deterministic_corrections,
     fragment_error_indices,
     make_fragment_repair_subset,
+    merge_fragment_repair,
 )
 from liber_harvest.models import ExegateHarvestResult, HarvestInputEnvelope
+from liber_harvest.pipeline import HarvestContractError, LiberHarvester
 from liber_harvest.providers.lmstudio import LMStudioHTTPError, LMStudioProvider
 
 SHA = "a" * 64
@@ -206,6 +209,62 @@ def test_t01_regression_fragment_repair_subset_does_not_resend_whole_candidate()
     assert len(json.dumps(subset)) < len(json.dumps(candidate)) / 10
 
 
+def test_fragment_repair_can_fix_concept_key_and_remaps_coverage():
+    candidate = _base_candidate()
+    candidate["fragments"] = [{"concept_key": "INVALID KEY"}]
+    candidate["coverage"] = [
+        {
+            "json_pointer": "/prima_materia_raw",
+            "disposition": "extracted",
+            "evidence_layer": "source_semantics",
+            "source_modality": "asserted",
+            "concept_keys": ["INVALID KEY"],
+        }
+    ]
+    repaired = {
+        **_base_candidate(),
+        "fragments": [{"concept_key": "valid_key"}],
+    }
+    merged = merge_fragment_repair(candidate, (0,), repaired)
+    assert merged["fragments"][0]["concept_key"] == "valid_key"
+    assert merged["coverage"][0]["concept_keys"] == ["valid_key"]
+
+
+def test_mixed_scope_validation_error_is_not_fragment_repairable():
+    candidate = _base_candidate()
+    candidate.pop("source")
+    candidate["fragments"] = [{"concept_key": "broken_fragment"}]
+    with pytest.raises(ValidationError) as caught:
+        ExegateHarvestResult.model_validate(candidate)
+    assert fragment_error_indices(caught.value) == (0,)
+    assert not all_validation_errors_fragment_local(caught.value)
+
+
+class MixedScopeProvider:
+    def __init__(self):
+        self.repair_calls = 0
+
+    def extract(self, envelope):
+        del envelope
+        candidate = _base_candidate()
+        candidate.pop("source")
+        candidate["fragments"] = [{"concept_key": "broken_fragment"}]
+        return candidate
+
+    def repair(self, candidate, validation_errors, envelope):
+        del candidate, validation_errors, envelope
+        self.repair_calls += 1
+        raise AssertionError("mixed-scope validation must not invoke repair")
+
+
+def test_pipeline_does_not_spend_repair_call_on_mixed_scope_error():
+    provider = MixedScopeProvider()
+    harvester = LiberHarvester(provider, max_repairs=1)
+    with pytest.raises(HarvestContractError, match="non-fragment schema errors"):
+        harvester._extract_and_validate(_envelope())
+    assert provider.repair_calls == 0
+
+
 def test_lmstudio_http_error_preserves_server_body():
     request = httpx.Request("POST", "http://host:1234/api/v1/chat")
     response = httpx.Response(
@@ -219,7 +278,7 @@ def test_lmstudio_http_error_preserves_server_body():
     assert "16384" in str(caught.value)
 
 
-def test_lmstudio_structured_payload_uses_json_schema(monkeypatch):
+def test_lmstudio_structured_preflight_binds_exact_loaded_instance(monkeypatch):
     provider = LMStudioProvider(
         base_url="http://host:1234",
         model="qwen/qwen3.5-9b",
@@ -227,6 +286,25 @@ def test_lmstudio_structured_payload_uses_json_schema(monkeypatch):
         max_output_tokens=4096,
         structured_output=True,
     )
+    monkeypatch.setattr(
+        provider,
+        "list_models",
+        lambda: {
+            "models": [
+                {
+                    "key": "qwen/qwen3.5-9b",
+                    "display_name": "Qwen3.5 9B",
+                    "loaded_instances": [
+                        {"id": "wrong-context", "config": {"context_length": 8192}},
+                        {"id": "harvest-qwen-16k", "config": {"context_length": 16384}},
+                    ],
+                }
+            ]
+        },
+    )
+    meta = provider.benchmark_preflight()
+    assert meta["structured_model_instance_id"] == "harvest-qwen-16k"
+
     captured = {}
 
     def fake_post(url, payload):
@@ -237,6 +315,7 @@ def test_lmstudio_structured_payload_uses_json_schema(monkeypatch):
     monkeypatch.setattr(provider, "_post_with_retries", fake_post)
     assert provider._request_structured(input_text="x", system_prompt="y") == "{}"
     assert captured["url"].endswith("/v1/chat/completions")
+    assert captured["payload"]["model"] == "harvest-qwen-16k"
     response_format = captured["payload"]["response_format"]
     assert response_format["type"] == "json_schema"
     assert response_format["json_schema"]["schema"]["type"] == "object"
@@ -269,10 +348,12 @@ class NeverExtractProvider:
         return {"ok": True}
 
     def extract(self, envelope):
+        del envelope
         self.extract_calls += 1
         raise AssertionError("preflight must abort before inference")
 
     def repair(self, candidate, validation_errors, envelope):
+        del candidate, validation_errors, envelope
         raise AssertionError("repair must not run")
 
 
