@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import ValidationError
 
-from .providers.base import ExtractionProvider
+from .adapters.base import SourceAdapter
+from .adapters.exegate.loader import ExegateAdapter
 from .constants import EXTRACTOR_VERSION
 from .corrections import (
+    all_validation_errors_fragment_local,
     apply_deterministic_corrections,
     fragment_error_indices,
     make_fragment_repair_subset,
@@ -19,10 +21,11 @@ from .corrections import (
 from .exporter import export_harvest
 from .materializer import materialize_fragment
 from .models import ExegateHarvestResult, HarvestManifest, HarvestSourceRef, LoreFragmentRecord
-from .adapters.base import SourceAdapter
-from .adapters.exegate.loader import ExegateAdapter
+from .providers.base import ExtractionProvider
 from .validation import (
-    ValidationIssue, validate_materialized_record, validate_result_against_source,
+    ValidationIssue,
+    validate_materialized_record,
+    validate_result_against_source,
 )
 
 
@@ -63,7 +66,7 @@ class LiberHarvester:
 
     @staticmethod
     def make_run_id(source_sha256: str) -> str:
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
         return f"LHR-{stamp}-{source_sha256[:8].upper()}"
 
     @staticmethod
@@ -74,7 +77,8 @@ class LiberHarvester:
             if len(loc) >= 2 and loc[0] == "fragments" and loc[1] in indices:
                 selected.append(error)
         return "\n".join(
-            f"{'.'.join(str(part) for part in error.get('loc', ()))}: {error.get('msg', 'validation error')}"
+            f"{'.'.join(str(part) for part in error.get('loc', ()))}: "
+            f"{error.get('msg', 'validation error')}"
             for error in selected
         )
 
@@ -86,16 +90,23 @@ class LiberHarvester:
         except ValidationError as exc:
             if self.max_repairs == 0:
                 raise HarvestContractError(
-                    f"Extractor output failed v0.1.2 schema validation after deterministic correction: {exc}"
+                    "Extractor output failed v0.1.2 schema validation after deterministic "
+                    f"correction: {exc}"
+                ) from exc
+
+            if not all_validation_errors_fragment_local(exc):
+                raise HarvestContractError(
+                    "Extractor output has non-fragment schema errors; v0.1.7 refuses to spend "
+                    "its single model-repair call on a mixed/full-result repair: "
+                    f"{exc}"
                 ) from exc
 
             indices = fragment_error_indices(exc)
             subset = make_fragment_repair_subset(candidate, indices)
             if subset is None:
                 raise HarvestContractError(
-                    "Extractor output failed v0.1.2 schema validation outside fragment scope; "
-                    "v0.1.7 will not send the full result back to the model for repair: "
-                    f"{exc}"
+                    "Extractor output failed v0.1.2 schema validation outside repairable "
+                    f"fragment scope: {exc}"
                 ) from exc
 
             repair_errors = self._format_validation_errors(exc, indices)
@@ -128,7 +139,9 @@ class LiberHarvester:
         write_library: bool = True,
     ) -> HarvestExecution:
         loaded = self.adapter.load(source_path)
-        envelope, source_document, bundle_id = loaded.envelope, loaded.document, loaded.bundle_id
+        envelope = loaded.envelope
+        source_document = loaded.document
+        bundle_id = loaded.bundle_id
         result = self._extract_and_validate(envelope)
 
         issues = validate_result_against_source(
@@ -169,7 +182,6 @@ class LiberHarvester:
                 issues=materialized_issues,
             )
 
-        # Source identity is deterministic and never delegated to the model.
         source_ref = HarvestSourceRef(
             pipeline="exegate",
             source_path=envelope.source_path,
