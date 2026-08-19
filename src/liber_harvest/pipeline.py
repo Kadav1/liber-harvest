@@ -10,6 +10,12 @@ from pydantic import ValidationError
 
 from .providers.base import ExtractionProvider
 from .constants import EXTRACTOR_VERSION
+from .corrections import (
+    apply_deterministic_corrections,
+    fragment_error_indices,
+    make_fragment_repair_subset,
+    merge_fragment_repair,
+)
 from .exporter import export_harvest
 from .materializer import materialize_fragment
 from .models import ExegateHarvestResult, HarvestManifest, HarvestSourceRef, LoreFragmentRecord
@@ -35,7 +41,22 @@ class HarvestExecution:
 
 
 class LiberHarvester:
-    def __init__(self, provider: ExtractionProvider, *, adapter: SourceAdapter | None = None, max_repairs: int = 1):
+    """Run one source through extraction, deterministic correction, and materialization.
+
+    v0.1.7 caps semantic provider invocations at one extraction plus at most one
+    fragment-scoped repair. Deterministic source-validation failures are never sent
+    back to the model as a full-result repair prompt.
+    """
+
+    def __init__(
+        self,
+        provider: ExtractionProvider,
+        *,
+        adapter: SourceAdapter | None = None,
+        max_repairs: int = 1,
+    ):
+        if max_repairs not in {0, 1}:
+            raise ValueError("Liber Harvest v0.1.7 supports max_repairs=0 or 1")
         self.provider = provider
         self.adapter = adapter or ExegateAdapter()
         self.max_repairs = max_repairs
@@ -45,16 +66,58 @@ class LiberHarvester:
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         return f"LHR-{stamp}-{source_sha256[:8].upper()}"
 
+    @staticmethod
+    def _format_validation_errors(exc: ValidationError, indices: tuple[int, ...]) -> str:
+        selected = []
+        for error in exc.errors():
+            loc = error.get("loc", ())
+            if len(loc) >= 2 and loc[0] == "fragments" and loc[1] in indices:
+                selected.append(error)
+        return "\n".join(
+            f"{'.'.join(str(part) for part in error.get('loc', ()))}: {error.get('msg', 'validation error')}"
+            for error in selected
+        )
+
     def _extract_and_validate(self, envelope) -> ExegateHarvestResult:
         candidate = self.provider.extract(envelope)
-        for attempt in range(self.max_repairs + 1):
+        candidate, _ = apply_deterministic_corrections(candidate, envelope)
+        try:
+            return ExegateHarvestResult.model_validate(candidate)
+        except ValidationError as exc:
+            if self.max_repairs == 0:
+                raise HarvestContractError(
+                    f"Extractor output failed v0.1.2 schema validation after deterministic correction: {exc}"
+                ) from exc
+
+            indices = fragment_error_indices(exc)
+            subset = make_fragment_repair_subset(candidate, indices)
+            if subset is None:
+                raise HarvestContractError(
+                    "Extractor output failed v0.1.2 schema validation outside fragment scope; "
+                    "v0.1.7 will not send the full result back to the model for repair: "
+                    f"{exc}"
+                ) from exc
+
+            repair_errors = self._format_validation_errors(exc, indices)
+            repaired_subset = self.provider.repair(subset, repair_errors, envelope)
+            repaired_subset, _ = apply_deterministic_corrections(repaired_subset, envelope)
             try:
-                return ExegateHarvestResult.model_validate(candidate)
-            except ValidationError as exc:
-                if attempt >= self.max_repairs:
-                    raise HarvestContractError(f"Extractor output failed v0.1.2 schema validation: {exc}") from exc
-                candidate = self.provider.repair(candidate, str(exc), envelope)
-        raise AssertionError("unreachable")
+                ExegateHarvestResult.model_validate(repaired_subset)
+            except ValidationError as repair_exc:
+                raise HarvestContractError(
+                    "Fragment-scoped repair failed v0.1.2 schema validation: "
+                    f"{repair_exc}"
+                ) from repair_exc
+
+            merged = merge_fragment_repair(candidate, indices, repaired_subset)
+            merged, _ = apply_deterministic_corrections(merged, envelope)
+            try:
+                return ExegateHarvestResult.model_validate(merged)
+            except ValidationError as merged_exc:
+                raise HarvestContractError(
+                    "Extractor output remained invalid after one fragment-scoped repair: "
+                    f"{merged_exc}"
+                ) from merged_exc
 
     def run(
         self,
@@ -74,29 +137,12 @@ class LiberHarvester:
             source_sha256=envelope.source_sha256,
             source_document=source_document,
         )
-        if issues and self.max_repairs > 0:
-            formatted = "\n".join(f"[{issue.code}] {issue.message}" for issue in issues)
-            repaired = self.provider.repair(
-                result.model_dump(mode="json"),
-                "Deterministic contract validation failed:\n" + formatted,
-                envelope,
-            )
-            try:
-                result = ExegateHarvestResult.model_validate(repaired)
-            except ValidationError as exc:
-                raise HarvestContractError(
-                    f"Repaired extractor output failed v0.1.2 schema validation: {exc}"
-                ) from exc
-            issues = validate_result_against_source(
-                result,
-                source_path=envelope.source_path,
-                source_sha256=envelope.source_sha256,
-                source_document=source_document,
-            )
         if issues:
             formatted = "\n".join(f"[{issue.code}] {issue.message}" for issue in issues)
             raise HarvestContractError(
-                f"Harvest result failed deterministic validation:\n{formatted}", issues=issues
+                "Harvest result failed deterministic validation; deterministic failures are "
+                "not delegated back to the model in v0.1.7:\n" + formatted,
+                issues=issues,
             )
 
         actual_run_id = run_id or self.make_run_id(envelope.source_sha256)
