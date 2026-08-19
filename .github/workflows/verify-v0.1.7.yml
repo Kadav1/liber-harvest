@@ -18,6 +18,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e '.[dev]'
+          pip install build
       - name: Test
         run: pytest -q
       - name: Ruff changed files
@@ -41,3 +42,7 @@ jobs:
           lh-benchmark --help
           lh-benchmark profile
           lh-benchmark cases
+      - name: Build wheel
+        run: |
+          python -m build --wheel
+          sha256sum dist/liber_harvest-0.1.7-py3-none-any.whl
