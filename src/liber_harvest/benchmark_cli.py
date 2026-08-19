@@ -1,8 +1,8 @@
 """CLI for running and comparing Liber Harvest model-selection benchmarks."""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -74,14 +74,14 @@ def show_profile():
 @app.command("run")
 def run_benchmark(
     provider: ProviderMode = typer.Option(..., "--provider", help="openai or lmstudio."),
-    model: Optional[str] = typer.Option(None, "--model", help="Provider model key."),
-    label: Optional[str] = typer.Option(None, "--label", help="Human-readable model/config label."),
-    cases: Optional[str] = typer.Option(None, "--cases", help="Comma-separated case IDs; default T01-T11."),
+    model: str | None = typer.Option(None, "--model", help="Provider model key."),
+    label: str | None = typer.Option(None, "--label", help="Human-readable model/config label."),
+    cases: str | None = typer.Option(None, "--cases", help="Comma-separated case IDs; default T01-T11."),
     corpus_root: Path = typer.Option(Path("data"), "--corpus-root"),
     calibration_root: Path = typer.Option(Path("calibration"), "--calibration-root"),
     out: Path = typer.Option(Path("benchmark-results"), "--out"),
-    lm_studio_url: Optional[str] = typer.Option(None, "--lm-studio-url"),
-    openai_base_url: Optional[str] = typer.Option(None, "--openai-base-url"),
+    lm_studio_url: str | None = typer.Option(None, "--lm-studio-url"),
+    openai_base_url: str | None = typer.Option(None, "--openai-base-url"),
     temperature: float = typer.Option(0.1, "--temperature", min=0.0, max=1.0),
     max_output_tokens: int = typer.Option(8192, "--max-output-tokens", min=1024),
     context_length: int = typer.Option(DEFAULT_CONTEXT_LENGTH, "--context-length", min=4096),
@@ -97,7 +97,7 @@ def run_benchmark(
     ),
     timeout: float = typer.Option(600.0, "--timeout", min=1.0),
     max_repairs: int = typer.Option(1, "--max-repairs", min=0, max=1),
-    hardware_note: Optional[str] = typer.Option(None, "--hardware-note"),
+    hardware_note: str | None = typer.Option(None, "--hardware-note"),
 ):
     """Run selected T01-T11 cases against one live model/provider."""
     if provider == ProviderMode.STATIC:
