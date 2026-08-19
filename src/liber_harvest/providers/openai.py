@@ -9,7 +9,7 @@ from typing import Any
 import httpx
 
 from ..adapters.exegate.contract import EXEGATE_HARVEST_SYSTEM_PROMPT
-from ..jsonutil import ModelResponseError, parse_json_object
+from ..jsonutil import parse_json_object
 from ..models import HarvestInputEnvelope
 
 
@@ -126,22 +126,13 @@ class OpenAIProvider:
         raise RuntimeError("OpenAI request failed") from last_exc
 
     def extract(self, envelope: HarvestInputEnvelope) -> dict[str, Any]:
+        # v0.1.7 removes the provider-internal syntax-repair call so a case has
+        # one extraction plus at most one pipeline-owned fragment repair.
         text = self._request(
             input_text=json.dumps(envelope.model_dump(mode="json"), ensure_ascii=False),
             system_prompt=EXEGATE_HARVEST_SYSTEM_PROMPT,
         )
-        try:
-            return parse_json_object(text)
-        except ModelResponseError:
-            repaired = self._request(
-                input_text=json.dumps(
-                    {"source_envelope": envelope.model_dump(mode="json"), "invalid_response": text},
-                    ensure_ascii=False,
-                ),
-                system_prompt=EXEGATE_HARVEST_SYSTEM_PROMPT
-                + "\n\nJSON SYNTAX REPAIR\nReturn one syntactically valid JSON object only.",
-            )
-            return parse_json_object(repaired)
+        return parse_json_object(text)
 
     def repair(
         self,
@@ -153,12 +144,15 @@ class OpenAIProvider:
             input_text=json.dumps(
                 {
                     "source_envelope": envelope.model_dump(mode="json"),
-                    "invalid_candidate": candidate,
+                    "invalid_fragment_subset": candidate,
                     "validation_errors": validation_errors,
                 },
                 ensure_ascii=False,
             ),
             system_prompt=EXEGATE_HARVEST_SYSTEM_PROMPT
-            + "\n\nREPAIR MODE\nCorrect the full JSON object without adding new lore.",
+            + "\n\nFRAGMENT-SCOPED REPAIR MODE\n"
+            + "Correct only the supplied invalid fragment subset. Return one full "
+            + "ExegateHarvestResult object containing exactly those repaired fragments. "
+            + "Do not add unrelated lore.",
         )
         return parse_json_object(text)
