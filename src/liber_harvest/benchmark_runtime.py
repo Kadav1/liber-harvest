@@ -1,9 +1,12 @@
 """v0.1.7 benchmark runtime with preflight and ranking-safe failure handling."""
+
 from __future__ import annotations
 
+import json
 import time
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import httpx
 
@@ -51,7 +54,7 @@ def preflight_benchmark(
             source_path = resolve_case_source(case, corpus_root)
             adapter.load(source_path)
             sources[case.case_id] = source_path
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - preflight must aggregate every source failure.
             problems.append(f"{case.case_id}: {exc}")
 
     provider_meta: dict[str, Any] = {}
@@ -61,7 +64,7 @@ def preflight_benchmark(
             value = preflight()
             if isinstance(value, dict):
                 provider_meta = value
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - report provider readiness with source failures.
             problems.append(f"provider: {exc}")
 
     if problems:
@@ -190,7 +193,7 @@ def run_model_benchmark(
             result["harvest_run_id"] = execution.run_id
             result["session_mode"] = SESSION_MODE
             result["ranking_scorable"] = True
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - every case must emit a typed benchmark result.
             result = _failure_payload(
                 case=case,
                 exc=exc,
@@ -239,13 +242,13 @@ def run_model_benchmark(
 
     status_counts = {
         status: sum(result["status"] == status for result in results)
-        for status in {
+        for status in (
             "completed",
             "contract_failed",
             "model_failed",
             "infrastructure_failed",
             "source_missing",
-        }
+        )
     }
     config = dict(configuration or {})
     config.update(
@@ -290,7 +293,10 @@ def run_model_benchmark(
             6,
         ),
         "total_elapsed_seconds": round(
-            sum(float(result.get("metrics", {}).get("elapsed_seconds", 0.0)) for result in results),
+            sum(
+                float(result.get("metrics", {}).get("elapsed_seconds", 0.0))
+                for result in results
+            ),
             6,
         ),
         "case_results": [
@@ -317,8 +323,6 @@ def run_model_benchmark(
 
 
 def load_summary(path: Path) -> dict[str, Any]:
-    import json
-
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or data.get("benchmark_version") != BENCHMARK_VERSION:
         raise ValueError(f"Not a {BENCHMARK_VERSION} summary: {path}")
@@ -337,13 +341,17 @@ def compare_summaries(paths: Iterable[Path]) -> list[dict[str, Any]]:
                 "model": summary.get("model"),
                 "ranking_eligible": bool(summary.get("ranking_eligible", False)),
                 "selection_score": float(score) if score is not None else None,
-                "mean_compliance_score": float(summary.get("mean_compliance_score", 0.0)),
+                "mean_compliance_score": float(
+                    summary.get("mean_compliance_score", 0.0)
+                ),
                 "target_pass_pct": float(summary.get("target_pass_pct", 0.0)),
                 "cases_completed": int(summary.get("cases_completed", 0)),
                 "cases_requested": int(summary.get("cases_requested", 0)),
                 "cases_failed": int(summary.get("cases_failed", 0)),
                 "repair_calls": int(summary.get("total_repair_calls", 0)),
-                "semantic_seconds": float(summary.get("total_semantic_seconds", 0.0)),
+                "semantic_seconds": float(
+                    summary.get("total_semantic_seconds", 0.0)
+                ),
             }
         )
     rows.sort(
